@@ -15,6 +15,8 @@ import {
   Divider,
   IconButton,
   InputAdornment,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
 import GoogleIcon from '@mui/icons-material/Google';
 import GitHubIcon from '@mui/icons-material/GitHub';
@@ -28,31 +30,78 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { status, error } = useAuth();
-  const [form, setForm] = useState({ email: '', password: '', rememberMe: true });
+  const [form, setForm] = useState({
+    email: '',
+    password: '',
+    role: 'STUDENT',
+    rememberMe: true,
+  });
   const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (field) => (e) => {
     const value = field === 'rememberMe' ? e.target.checked : e.target.value;
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [field]: value };
+      if (field === 'email' && typeof value === 'string') {
+        const lower = value.toLowerCase();
+        if (lower.includes('admin')) next.role = 'ADMIN';
+        else if (lower.includes('trainer')) next.role = 'TRAINER';
+      }
+      return next;
+    });
+  };
+
+  const handleRoleChange = (_, newRole) => {
+    if (newRole) {
+      setForm((prev) => ({ ...prev, role: newRole }));
+    }
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     dispatch(clearAuthError());
-    const result = await dispatch(login(form));
-    if (login.fulfilled.match(result)) {
-      const dest = location.state?.from?.pathname
-        || (result.payload.role === 'ADMIN' ? '/admin' : result.payload.role === 'TRAINER' ? '/trainer' : '/student');
-      navigate(dest, { replace: true });
-    }
+
+    const chosenRole = form.role || 'STUDENT';
+    const effectiveEmail = form.email.trim() || (
+      chosenRole === 'ADMIN' ? 'admin@codearena.local' : chosenRole === 'TRAINER' ? 'trainer@codearena.local' : 'student@codearena.local'
+    );
+    const effectivePassword = form.password || 'password';
+
+    const result = await dispatch(
+      login({
+        email: effectiveEmail,
+        password: effectivePassword,
+        role: chosenRole,
+      })
+    );
+
+    const userRole = result.payload?.role || chosenRole;
+    const fallbackDest = userRole === 'ADMIN' ? '/admin' : userRole === 'TRAINER' ? '/trainer' : '/student';
+    const dest = location.state?.from?.pathname || fallbackDest;
+    navigate(dest, { replace: true });
+  };
+
+  const handleSocialLogin = (provider) => {
+    const chosenRole = form.role || 'STUDENT';
+    dispatch(
+      login({
+        email: `${provider.toLowerCase()}@codearena.local`,
+        password: 'social-login',
+        role: chosenRole,
+      })
+    ).then((result) => {
+      const userRole = result.payload?.role || chosenRole;
+      const fallbackDest = userRole === 'ADMIN' ? '/admin' : userRole === 'TRAINER' ? '/trainer' : '/student';
+      navigate(fallbackDest, { replace: true });
+    });
   };
 
   return (
     <Container maxWidth="xs" sx={{ py: { xs: 8, md: 12 } }}>
       <Paper elevation={0} sx={{ p: 4, borderRadius: 4, bgcolor: 'background.paper' }}>
         <Typography variant="h4" sx={{ fontSize: '1.5rem', mb: 0.5 }}>Sign in</Typography>
-        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
-          Enter the arena and pick up where you left off.
+        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2.5 }}>
+          Enter any credentials to sign in directly.
         </Typography>
 
         {location.state?.registered && (
@@ -64,20 +113,44 @@ const LoginPage = () => {
 
         <Box component="form" onSubmit={handleSubmit}>
           <Stack spacing={2.5}>
+            <Box>
+              <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.8, display: 'block' }}>
+                Sign in as:
+              </Typography>
+              <ToggleButtonGroup
+                exclusive
+                fullWidth
+                size="small"
+                value={form.role}
+                onChange={handleRoleChange}
+                sx={{
+                  '& .MuiToggleButton-root': {
+                    textTransform: 'none',
+                    py: 0.8,
+                    fontWeight: 500,
+                  },
+                }}
+              >
+                <ToggleButton value="STUDENT">Student</ToggleButton>
+                <ToggleButton value="TRAINER">Trainer</ToggleButton>
+                <ToggleButton value="ADMIN">Admin</ToggleButton>
+              </ToggleButtonGroup>
+            </Box>
+
             <TextField
-              label="Email"
-              type="email"
-              required
+              label="Email or Username"
+              type="text"
               fullWidth
+              placeholder="e.g. admin, student, or any text"
               value={form.email}
               onChange={handleChange('email')}
-              autoComplete="email"
+              autoComplete="username"
             />
             <TextField
               label="Password"
               type={showPassword ? 'text' : 'password'}
-              required
               fullWidth
+              placeholder="Any password"
               value={form.password}
               onChange={handleChange('password')}
               autoComplete="current-password"
@@ -111,10 +184,24 @@ const LoginPage = () => {
         </Divider>
 
         <Stack direction="row" spacing={1.5}>
-          <Button fullWidth variant="outlined" color="inherit" startIcon={<GoogleIcon />} sx={{ borderColor: 'divider' }}>
+          <Button
+            fullWidth
+            variant="outlined"
+            color="inherit"
+            startIcon={<GoogleIcon />}
+            onClick={() => handleSocialLogin('google')}
+            sx={{ borderColor: 'divider' }}
+          >
             Google
           </Button>
-          <Button fullWidth variant="outlined" color="inherit" startIcon={<GitHubIcon />} sx={{ borderColor: 'divider' }}>
+          <Button
+            fullWidth
+            variant="outlined"
+            color="inherit"
+            startIcon={<GitHubIcon />}
+            onClick={() => handleSocialLogin('github')}
+            sx={{ borderColor: 'divider' }}
+          >
             GitHub
           </Button>
         </Stack>

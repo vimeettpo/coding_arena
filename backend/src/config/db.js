@@ -2,13 +2,11 @@ const mongoose = require('mongoose');
 const env = require('./env');
 const dns = require('dns');
 
-// Set public DNS servers to resolve MongoDB Atlas SRV records on Windows local networks only
-if (process.platform === 'win32' && process.env.NODE_ENV !== 'production') {
-  try {
-    dns.setServers(['8.8.8.8', '1.1.1.1']);
-  } catch (err) {
-    // Fallback gracefully if setServers is unavailable
-  }
+// Ensure public DNS servers (Google / Cloudflare) are configured to resolve MongoDB Atlas SRV records
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']);
+} catch (_err) {
+  // Fallback gracefully if setServers is unavailable
 }
 
 
@@ -105,8 +103,23 @@ async function connectDB() {
       throw new Error('MONGODB_URI is not set. Copy .env.example to .env and fill it in.');
     }
     mongoose.set('strictQuery', true);
+
+    try {
+      dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']);
+    } catch (_e) {}
+
     connectionPromise = mongoose.connect(env.mongodbUri, {
       maxPoolSize: 10,
+    }).catch(async (err) => {
+      if (err.message && (err.message.includes('querySrv') || err.message.includes('ECONNREFUSED'))) {
+        try {
+          dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']);
+          return await mongoose.connect(env.mongodbUri, { maxPoolSize: 10 });
+        } catch (retryErr) {
+          throw retryErr;
+        }
+      }
+      throw err;
     });
   }
   await connectionPromise;

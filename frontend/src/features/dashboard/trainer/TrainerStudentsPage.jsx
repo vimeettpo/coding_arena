@@ -46,7 +46,7 @@ const TrainerStudentsPage = () => {
 
   return (
     <Box>
-      <Typography variant="h4" sx={{ fontSize: '1.6rem', mb: 0.5 }}>
+      <Typography variant="h4" sx={{ fontSize: '1.6rem', mb: 0.5, color: '#0F172A', fontWeight: 800 }}>
         Students
       </Typography>
       <Typography sx={{ color: 'text.secondary', mb: 3 }}>
@@ -63,17 +63,18 @@ const TrainerStudentsPage = () => {
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchRoundedIcon fontSize="small" />
+                <SearchRoundedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
               </InputAdornment>
             ),
           }}
+          sx={{ bgcolor: '#FFFFFF', borderRadius: 2 }}
         />
       </Stack>
 
       {error ? (
         <Typography color="error">{error}</Typography>
       ) : loading ? (
-        <Paper elevation={0} sx={{ p: 3, borderRadius: 3 }}>
+        <Paper elevation={0} sx={{ p: 3, borderRadius: 3, bgcolor: '#FFFFFF' }}>
           <Stack spacing={2}>
             {[1, 2, 3, 4, 5].map((i) => (
               <Skeleton key={i} variant="rectangular" height={48} sx={{ borderRadius: 1 }} />
@@ -81,7 +82,7 @@ const TrainerStudentsPage = () => {
           </Stack>
         </Paper>
       ) : (
-        <Paper elevation={0} sx={{ borderRadius: 3, overflow: 'hidden' }}>
+        <Paper elevation={0} sx={{ borderRadius: 3, overflow: 'hidden', bgcolor: '#FFFFFF' }}>
           <Table>
             <TableHead>
               <TableRow>
@@ -96,23 +97,24 @@ const TrainerStudentsPage = () => {
             <TableBody>
               {filteredStudents.length > 0 ? (
                 filteredStudents.map((s) => (
-                  <TableRow key={s.id} sx={{ '& td': { borderColor: 'divider' } }}>
+                  <TableRow key={s.id} hover sx={{ '& td': { borderColor: 'divider' } }}>
                     <TableCell>
                       <Stack direction="row" alignItems="center" spacing={1.5}>
                         <Avatar
                           sx={{
-                            width: 34,
-                            height: 34,
+                            width: 36,
+                            height: 36,
                             fontSize: '0.85rem',
-                            bgcolor: 'primary.main',
-                            color: '#12100A',
+                            bgcolor: 'rgba(245, 158, 11, 0.15)',
+                            color: '#D97706',
                             fontWeight: 700,
+                            border: '1px solid rgba(245, 158, 11, 0.3)',
                           }}
                         >
                           {s.name ? s.name[0] : 'S'}
                         </Avatar>
                         <Box>
-                          <Typography variant="body2" fontWeight={600}>
+                          <Typography variant="body2" fontWeight={600} color="text.primary">
                             {s.name}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">

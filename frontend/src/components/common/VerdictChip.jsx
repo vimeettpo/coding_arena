@@ -3,14 +3,14 @@ import { Chip } from '@mui/material';
 // Maps every possible judge verdict to a color so it's instantly scannable
 // in tables, submission feeds and the run console.
 const VERDICT_STYLES = {
-  ACCEPTED: { label: 'Accepted', color: '#34D399', bg: 'rgba(52,211,153,0.12)' },
-  WRONG_ANSWER: { label: 'Wrong Answer', color: '#FB6467', bg: 'rgba(251,100,103,0.12)' },
-  TIME_LIMIT_EXCEEDED: { label: 'Time Limit Exceeded', color: '#FFB020', bg: 'rgba(255,176,32,0.12)' },
-  MEMORY_LIMIT_EXCEEDED: { label: 'Memory Limit Exceeded', color: '#FFB020', bg: 'rgba(255,176,32,0.12)' },
-  RUNTIME_ERROR: { label: 'Runtime Error', color: '#FB6467', bg: 'rgba(251,100,103,0.12)' },
-  COMPILATION_ERROR: { label: 'Compilation Error', color: '#FB6467', bg: 'rgba(251,100,103,0.12)' },
-  PRESENTATION_ERROR: { label: 'Presentation Error', color: '#38BDF8', bg: 'rgba(56,189,248,0.12)' },
-  PENDING: { label: 'Judging…', color: '#8C9AAE', bg: 'rgba(140,154,174,0.12)' },
+  ACCEPTED: { label: 'Accepted', color: '#059669', bg: 'rgba(16, 185, 129, 0.10)', border: 'rgba(16, 185, 129, 0.3)' },
+  WRONG_ANSWER: { label: 'Wrong Answer', color: '#DC2626', bg: 'rgba(239, 68, 68, 0.10)', border: 'rgba(239, 68, 68, 0.3)' },
+  TIME_LIMIT_EXCEEDED: { label: 'Time Limit Exceeded', color: '#D97706', bg: 'rgba(245, 158, 11, 0.10)', border: 'rgba(245, 158, 11, 0.3)' },
+  MEMORY_LIMIT_EXCEEDED: { label: 'Memory Limit Exceeded', color: '#D97706', bg: 'rgba(245, 158, 11, 0.10)', border: 'rgba(245, 158, 11, 0.3)' },
+  RUNTIME_ERROR: { label: 'Runtime Error', color: '#DC2626', bg: 'rgba(239, 68, 68, 0.10)', border: 'rgba(239, 68, 68, 0.3)' },
+  COMPILATION_ERROR: { label: 'Compilation Error', color: '#B91C1C', bg: 'rgba(239, 68, 68, 0.10)', border: 'rgba(239, 68, 68, 0.3)' },
+  PRESENTATION_ERROR: { label: 'Presentation Error', color: '#0284C7', bg: 'rgba(2, 132, 199, 0.10)', border: 'rgba(2, 132, 199, 0.3)' },
+  PENDING: { label: 'Judging…', color: '#64748B', bg: 'rgba(100, 116, 139, 0.10)', border: 'rgba(100, 116, 139, 0.3)' },
 };
 
 const VerdictChip = ({ verdict, size = 'small' }) => {
@@ -22,8 +22,10 @@ const VerdictChip = ({ verdict, size = 'small' }) => {
       sx={{
         color: style.color,
         backgroundColor: style.bg,
-        border: `1px solid ${style.color}33`,
+        border: `1px solid ${style.border}`,
         fontWeight: 600,
+        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: '0.72rem',
       }}
     />
   );

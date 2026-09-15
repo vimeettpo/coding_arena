@@ -8,9 +8,9 @@ import { useNavigate } from 'react-router-dom';
 import quizService from '@/services/quizService';
 
 const STATUS_STYLE = {
-  LIVE: { label: 'Live now', color: '#34D399' },
-  UPCOMING: { label: 'Upcoming', color: '#38BDF8' },
-  ENDED: { label: 'Ended', color: '#8C9AAE' },
+  LIVE: { label: 'Live Now', color: '#15803D', bgcolor: '#DCFCE7', border: '1px solid #BBF7D0' },
+  UPCOMING: { label: 'Upcoming', color: '#0284C7', bgcolor: '#E0F2FE', border: '1px solid #BAE6FD' },
+  ENDED: { label: 'Ended', color: '#64748B', bgcolor: '#F1F5F9', border: '1px solid #E2E8F0' },
 };
 
 const StudentQuizzesPage = () => {
@@ -23,7 +23,7 @@ const StudentQuizzesPage = () => {
     {
       id: 'q1',
       title: 'Data Structures & Algorithms Diagnostic',
-      description: 'Evaluate your foundation in arrays, trees, hashing, and graphs.',
+      description: 'Evaluate your foundation in arrays, trees, hashing, dynamic programming, and graphs.',
       durationMinutes: 45,
       totalMarks: 50,
       status: 'LIVE',
@@ -34,7 +34,7 @@ const StudentQuizzesPage = () => {
     {
       id: 'q2',
       title: 'Frontend Engineering Core Assessment',
-      description: 'Core concepts in React, JavaScript event loops, DOM, and async programming.',
+      description: 'Core concepts in React, JavaScript event loops, DOM manipulation, and asynchronous programming.',
       durationMinutes: 60,
       totalMarks: 60,
       status: 'UPCOMING',
@@ -45,6 +45,7 @@ const StudentQuizzesPage = () => {
   ];
 
   useEffect(() => {
+    setLoading(true);
     quizService
       .list()
       .then((res) => {
@@ -54,22 +55,27 @@ const StudentQuizzesPage = () => {
       .catch(() => {
         setQuizzes(SAMPLE_QUIZZES);
       })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   return (
     <Box>
-      <Typography variant="h4" sx={{ fontSize: '1.6rem', mb: 0.5 }}>
-        Tests & Assessments
-      </Typography>
-      <Typography sx={{ color: 'text.secondary', mb: 3 }}>
-        Attempt scheduled tests within active window with automated scoring.
-      </Typography>
+      <Box sx={{ mb: 3.5 }}>
+        <Typography variant="h4" sx={{ fontWeight: 700, color: '#0F172A', mb: 0.5 }}>
+          Tests & Assessments
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          Attempt scheduled assessments and quizzes within active windows with automated, instant evaluation.
+        </Typography>
+      </Box>
 
       {loading ? (
         <Grid container spacing={2.5}>
-          {[1, 2, 3].map((i) => (
+          {[1, 2, 3, 4].map((i) => (
             <Grid item xs={12} md={6} key={i}>
-              <Skeleton variant="rounded" height={180} sx={{ borderRadius: 3 }} />
+              <Skeleton variant="rounded" height={190} sx={{ borderRadius: 3 }} />
             </Grid>
           ))}
         </Grid>
@@ -78,33 +84,59 @@ const StudentQuizzesPage = () => {
           {quizzes.map((q) => {
             const statusKey = q.status || 'UPCOMING';
             const style = STATUS_STYLE[statusKey] || STATUS_STYLE.UPCOMING;
+            const qCount = q.questionsCount ?? q.questionCount ?? 15;
+
             return (
               <Grid item xs={12} md={6} key={q.id}>
-                <Paper elevation={0} sx={{ p: 3, borderRadius: 3 }}>
-                  <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 1 }}>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontSize: '1.1rem', mb: 0.5 }}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 3,
+                    borderRadius: 3,
+                    bgcolor: '#FFFFFF',
+                    border: '1px solid #E2E8F0',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)',
+                      borderColor: '#CBD5E1',
+                    },
+                  }}
+                >
+                  <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 1.5 }}>
+                    <Box sx={{ pr: 2 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#0F172A', fontSize: '1.05rem', mb: 0.5 }}>
                         {q.title}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="body2" sx={{ color: '#64748B', lineHeight: 1.6 }}>
                         {q.description || 'No description provided.'}
                       </Typography>
                     </Box>
                     <Chip
                       size="small"
                       label={style.label}
-                      sx={{ color: style.color, bgcolor: `${style.color}1F`, fontWeight: 600 }}
+                      sx={{
+                        color: style.color,
+                        bgcolor: style.bgcolor,
+                        border: style.border,
+                        fontWeight: 700,
+                        fontSize: '0.75rem',
+                        height: 24,
+                      }}
                     />
                   </Stack>
 
-                  <Stack direction="row" spacing={2} sx={{ my: 2, color: 'text.secondary' }}>
-                    <Stack direction="row" spacing={0.5} alignItems="center">
-                      <QuizRoundedIcon sx={{ fontSize: 16 }} />
-                      <Typography variant="caption">{q.questionCount} Questions ({q.totalMarks} Marks)</Typography>
+                  <Stack direction="row" spacing={2.5} sx={{ my: 2.5, color: '#64748B' }}>
+                    <Stack direction="row" spacing={0.75} alignItems="center">
+                      <QuizRoundedIcon sx={{ fontSize: 18, color: '#94A3B8' }} />
+                      <Typography variant="body2" sx={{ fontWeight: 500, color: '#475569' }}>
+                        {qCount} Questions ({q.totalMarks} Marks)
+                      </Typography>
                     </Stack>
-                    <Stack direction="row" spacing={0.5} alignItems="center">
-                      <ScheduleRoundedIcon sx={{ fontSize: 16 }} />
-                      <Typography variant="caption">{q.durationMinutes} Mins</Typography>
+                    <Stack direction="row" spacing={0.75} alignItems="center">
+                      <ScheduleRoundedIcon sx={{ fontSize: 18, color: '#94A3B8' }} />
+                      <Typography variant="body2" sx={{ fontWeight: 500, color: '#475569' }}>
+                        {q.durationMinutes} Mins
+                      </Typography>
                     </Stack>
                   </Stack>
 
@@ -115,6 +147,12 @@ const StudentQuizzesPage = () => {
                       color="success"
                       startIcon={<CheckCircleRoundedIcon />}
                       onClick={() => navigate(`/quizzes/${q.id}/attempt`)}
+                      sx={{
+                        fontWeight: 600,
+                        textTransform: 'none',
+                        py: 1,
+                        borderRadius: 2,
+                      }}
                     >
                       Completed (Score: {q.score !== null && q.score !== undefined ? q.score : (q.userScore || 0)} / {q.totalMarks})
                     </Button>
@@ -125,6 +163,13 @@ const StudentQuizzesPage = () => {
                       color="primary"
                       startIcon={<PlayArrowRoundedIcon />}
                       onClick={() => navigate(`/quizzes/${q.id}/attempt`)}
+                      sx={{
+                        fontWeight: 700,
+                        textTransform: 'none',
+                        py: 1,
+                        borderRadius: 2,
+                        boxShadow: '0 2px 8px rgba(245, 158, 11, 0.25)',
+                      }}
                     >
                       Attempt Test Now
                     </Button>
@@ -135,8 +180,8 @@ const StudentQuizzesPage = () => {
           })}
         </Grid>
       ) : (
-        <Paper elevation={0} sx={{ p: 6, borderRadius: 3, textAlign: 'center' }}>
-          <Typography color="text.secondary">
+        <Paper elevation={0} sx={{ p: 6, borderRadius: 3, textAlign: 'center', bgcolor: '#FFFFFF', border: '1px solid #E2E8F0' }}>
+          <Typography sx={{ color: '#64748B', fontWeight: 500 }}>
             No tests scheduled right now. Check back soon!
           </Typography>
         </Paper>

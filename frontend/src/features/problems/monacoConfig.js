@@ -26,10 +26,24 @@ export const defineMonacoThemes = (monaco) => {
   monaco.editor.defineTheme('ca-light', {
     base: 'vs',
     inherit: true,
-    rules: [],
+    rules: [
+      { token: 'comment', foreground: '64748B', fontStyle: 'italic' },
+      { token: 'keyword', foreground: '7C3AED', fontStyle: 'bold' },
+      { token: 'string', foreground: '059669' },
+      { token: 'number', foreground: '0284C7' },
+      { token: 'type', foreground: '2563EB' },
+      { token: 'identifier', foreground: '0F172A' },
+      { token: 'delimiter', foreground: '334155' },
+    ],
     colors: {
       'editor.background': '#FFFFFF',
-      'editor.foreground': '#12100A',
+      'editor.foreground': '#0F172A',
+      'editorLineNumber.foreground': '#94A3B8',
+      'editorLineNumber.activeForeground': '#D97706',
+      'editor.selectionBackground': '#FEF3C7',
+      'editorCursor.foreground': '#D97706',
+      'editor.lineHighlightBackground': '#F8FAFC',
+      'editorGutter.background': '#FAFAFA',
     },
   });
 };

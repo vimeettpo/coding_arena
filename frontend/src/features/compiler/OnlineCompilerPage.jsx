@@ -8,7 +8,6 @@ import {
   IconButton,
   Button,
   Tooltip,
-  Divider,
   Chip,
 } from '@mui/material';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
@@ -176,22 +175,21 @@ const OnlineCompilerPage = () => {
       <Paper
         elevation={0}
         sx={{
-          width: 64,
+          width: 68,
           borderRadius: 3,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           py: 2,
           gap: 1.5,
-          bgcolor: 'background.paper',
-          borderRight: '1px solid',
-          borderColor: 'divider',
+          bgcolor: '#FFFFFF',
+          border: '1px solid #E2E8F0',
         }}
       >
         {COMPILER_LANGUAGES.map((lang) => {
           const isSelected = selectedLang.id === lang.id;
           return (
-            <Tooltip key={lang.id} title={`${lang.name} Compiler`} placement="right">
+            <Tooltip key={lang.id} title={`${lang.name} Compiler`} placement="right" arrow>
               <Box
                 onClick={() => handleLanguageSelect(lang)}
                 sx={{
@@ -203,16 +201,17 @@ const OnlineCompilerPage = () => {
                   justifyContent: 'center',
                   cursor: 'pointer',
                   fontWeight: 700,
-                  fontSize: '0.85rem',
+                  fontSize: '0.8125rem',
                   fontFamily: "'JetBrains Mono', monospace",
-                  bgcolor: isSelected ? 'primary.main' : 'background.default',
-                  color: isSelected ? '#ffffff' : 'text.secondary',
-                  border: isSelected ? 'none' : '1px solid',
-                  borderColor: 'divider',
-                  transition: 'all 0.2s ease',
+                  bgcolor: isSelected ? 'rgba(245, 158, 11, 0.15)' : '#F8FAFC',
+                  color: isSelected ? '#D97706' : '#64748B',
+                  border: isSelected ? '1.5px solid #F59E0B' : '1px solid #E2E8F0',
+                  boxShadow: isSelected ? '0 2px 6px rgba(245, 158, 11, 0.2)' : 'none',
+                  transition: 'all 0.15s ease',
                   '&:hover': {
-                    bgcolor: isSelected ? 'primary.main' : 'action.hover',
-                    color: isSelected ? '#ffffff' : 'text.primary',
+                    bgcolor: isSelected ? 'rgba(245, 158, 11, 0.2)' : '#F1F5F9',
+                    color: isSelected ? '#D97706' : '#0F172A',
+                    borderColor: isSelected ? '#F59E0B' : '#CBD5E1',
                   },
                 }}
               >
@@ -234,7 +233,8 @@ const OnlineCompilerPage = () => {
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
-            bgcolor: 'background.paper',
+            bgcolor: '#FFFFFF',
+            border: '1px solid #E2E8F0',
           }}
         >
           {/* Header Bar */}
@@ -242,38 +242,40 @@ const OnlineCompilerPage = () => {
             direction="row"
             alignItems="center"
             justifyContent="space-between"
-            sx={{ px: 2, py: 1.2, borderBottom: '1px solid', borderColor: 'divider' }}
+            sx={{ px: 2, py: 1.2, borderBottom: '1px solid #E2E8F0', bgcolor: '#FAFAFA' }}
           >
             <Stack direction="row" alignItems="center" spacing={1.5}>
               <Chip
                 label={selectedLang.filename}
                 size="small"
-                variant="outlined"
                 sx={{
                   fontFamily: "'JetBrains Mono', monospace",
                   fontWeight: 600,
+                  fontSize: '0.75rem',
                   borderRadius: 1.5,
-                  px: 0.5,
+                  bgcolor: '#FFFFFF',
+                  color: '#0F172A',
+                  border: '1px solid #E2E8F0',
                 }}
               />
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 500 }}>
                 {selectedLang.name} Online Compiler
               </Typography>
             </Stack>
 
             <Stack direction="row" spacing={1} alignItems="center">
               <Tooltip title="Decrease font size">
-                <IconButton size="small" onClick={() => dispatch(setFontSize(Math.max(11, fontSize - 1)))}>
+                <IconButton size="small" onClick={() => dispatch(setFontSize(Math.max(11, fontSize - 1)))} sx={{ color: '#64748B' }}>
                   <TextDecreaseRoundedIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Increase font size">
-                <IconButton size="small" onClick={() => dispatch(setFontSize(Math.min(22, fontSize + 1)))}>
+                <IconButton size="small" onClick={() => dispatch(setFontSize(Math.min(22, fontSize + 1)))} sx={{ color: '#64748B' }}>
                   <TextIncreaseRoundedIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Toggle theme">
-                <IconButton size="small" onClick={() => dispatch(toggleTheme())}>
+                <IconButton size="small" onClick={() => dispatch(toggleTheme())} sx={{ color: '#64748B' }}>
                   {monacoTheme === 'ca-dark' ? (
                     <DarkModeRoundedIcon fontSize="small" />
                   ) : (
@@ -287,7 +289,12 @@ const OnlineCompilerPage = () => {
                 startIcon={<PlayArrowRoundedIcon />}
                 onClick={handleRun}
                 disabled={isRunning}
-                sx={{ px: 3, borderRadius: 2, fontWeight: 700, textTransform: 'none' }}
+                sx={{
+                  px: 3,
+                  fontWeight: 700,
+                  textTransform: 'none',
+                  boxShadow: '0 2px 8px rgba(245, 158, 11, 0.25)',
+                }}
               >
                 {isRunning ? 'Running…' : 'Run'}
               </Button>
@@ -324,7 +331,8 @@ const OnlineCompilerPage = () => {
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
-            bgcolor: 'background.paper',
+            bgcolor: '#FFFFFF',
+            border: '1px solid #E2E8F0',
           }}
         >
           {/* Header Bar */}
@@ -332,13 +340,13 @@ const OnlineCompilerPage = () => {
             direction="row"
             alignItems="center"
             justifyContent="space-between"
-            sx={{ px: 2, py: 1.2, borderBottom: '1px solid', borderColor: 'divider' }}
+            sx={{ px: 2, py: 1.2, borderBottom: '1px solid #E2E8F0', bgcolor: '#FAFAFA' }}
           >
-            <Typography variant="subtitle2" fontWeight={600}>
-              Output
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#0F172A' }}>
+              Execution Output
             </Typography>
             <Tooltip title="Clear output">
-              <IconButton size="small" onClick={() => setOutput(null)}>
+              <IconButton size="small" onClick={() => setOutput(null)} sx={{ color: '#64748B' }}>
                 <DeleteSweepRoundedIcon fontSize="small" />
               </IconButton>
             </Tooltip>
@@ -350,51 +358,70 @@ const OnlineCompilerPage = () => {
               flex: 1,
               p: 2,
               overflow: 'auto',
-              bgcolor: monacoTheme === 'ca-dark' ? '#0d1117' : '#f8fafc',
+              bgcolor: monacoTheme === 'ca-dark' ? '#0F172A' : '#F8FAFC',
               fontFamily: "'JetBrains Mono', monospace",
-              fontSize: '0.88rem',
-              color: monacoTheme === 'ca-dark' ? '#e6edf3' : '#1e293b',
+              fontSize: '0.84rem',
+              color: monacoTheme === 'ca-dark' ? '#F8FAFC' : '#0F172A',
               whiteSpace: 'pre-wrap',
               wordBreak: 'break-word',
             }}
           >
             {isRunning && (
-              <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+              <Typography variant="body2" sx={{ color: '#D97706', fontWeight: 600 }}>
                 Compiling and running {selectedLang.name} program…
               </Typography>
             )}
             {!isRunning && output && (
               <Stack spacing={1}>
                 {output.verdict === 'COMPILATION_ERROR' && (
-                  <Typography variant="caption" color="error.main" fontWeight={700}>
-                    Compilation Error:
-                  </Typography>
+                  <Chip
+                    label="Compilation Error"
+                    size="small"
+                    sx={{ bgcolor: '#FEE2E2', color: '#B91C1C', border: '1px solid #FECACA', fontWeight: 700, width: 'fit-content' }}
+                  />
                 )}
                 {output.verdict === 'RUNTIME_ERROR' && (
-                  <Typography variant="caption" color="error.main" fontWeight={700}>
-                    Runtime Error:
-                  </Typography>
+                  <Chip
+                    label="Runtime Error"
+                    size="small"
+                    sx={{ bgcolor: '#FEE2E2', color: '#B91C1C', border: '1px solid #FECACA', fontWeight: 700, width: 'fit-content' }}
+                  />
                 )}
-                <Box component="span" sx={{ lineHeight: 1.6 }}>
+                {output.verdict === 'SUCCESS' && (
+                  <Chip
+                    label="Execution Success"
+                    size="small"
+                    sx={{ bgcolor: '#DCFCE7', color: '#15803D', border: '1px solid #BBF7D0', fontWeight: 700, width: 'fit-content' }}
+                  />
+                )}
+                <Box
+                  component="div"
+                  sx={{
+                    lineHeight: 1.6,
+                    p: 1.5,
+                    bgcolor: '#FFFFFF',
+                    border: '1px solid #E2E8F0',
+                    borderRadius: 1.5,
+                  }}
+                >
                   {output.text}
                 </Box>
 
-                <Divider sx={{ my: 1 }} />
-                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 500 }}>
                   Execution time: {output.runtimeMs} ms
                 </Typography>
               </Stack>
             )}
             {!isRunning && !output && (
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                Click <strong>Run</strong> to compile and execute your code.
+              <Typography variant="body2" sx={{ color: '#64748B', fontStyle: 'italic' }}>
+                Click <strong>Run</strong> to compile and execute your code. Standard output and errors will appear here.
               </Typography>
             )}
           </Box>
 
           {/* Stdin / Custom Input Section */}
-          <Box sx={{ borderTop: '1px solid', borderColor: 'divider', p: 1.5, bgcolor: 'background.default' }}>
-            <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ mb: 0.5, display: 'block' }}>
+          <Box sx={{ borderTop: '1px solid #E2E8F0', p: 1.75, bgcolor: '#FAFAFA' }}>
+            <Typography variant="caption" sx={{ color: '#475569', fontWeight: 700, mb: 0.75, display: 'block' }}>
               Standard Input (stdin):
             </Typography>
             <Box
@@ -404,17 +431,19 @@ const OnlineCompilerPage = () => {
               placeholder="Provide input for scanf / cin / input() / Scanner here…"
               sx={{
                 width: '100%',
-                height: 70,
+                height: 72,
                 resize: 'none',
-                bgcolor: 'transparent',
-                border: '1px solid',
-                borderColor: 'divider',
+                bgcolor: '#FFFFFF',
+                border: '1px solid #E2E8F0',
                 borderRadius: 1.5,
-                p: 1,
+                p: 1.25,
                 outline: 'none',
-                color: 'text.primary',
+                color: '#0F172A',
                 fontFamily: "'JetBrains Mono', monospace",
-                fontSize: '0.82rem',
+                fontSize: '0.8125rem',
+                '&:focus': {
+                  borderColor: '#F59E0B',
+                },
               }}
             />
           </Box>

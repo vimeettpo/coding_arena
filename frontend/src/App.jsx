@@ -37,10 +37,11 @@ function App() {
           <Route path="/forgot-password" element={<ComingSoon title="Forgot password" description="Password reset via OTP verification." />} />
         </Route>
 
-        {/* Shared Authenticated Routes */}
-        <Route element={<ProtectedRoute allowedRoles={['TRAINER', 'ADMIN']} />}>
+        {/* Shared Authenticated Routes (Student, Trainer, Admin) */}
+        <Route element={<ProtectedRoute allowedRoles={['STUDENT', 'TRAINER', 'ADMIN']} />}>
           <Route element={<DashboardLayout />}>
             <Route path="/leaderboard" element={<LeaderboardPage />} />
+            <Route path="/contests" element={<ContestsListPage />} />
           </Route>
         </Route>
 

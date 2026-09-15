@@ -9,12 +9,17 @@ import { useAuth } from '@/app/hooks';
  * role are redirected to their own dashboard rather than shown a blank
  * page or a raw 403.
  */
-const ProtectedRoute = () => {
-  const { isAuthenticated } = useAuth();
+const ProtectedRoute = ({ allowedRoles }) => {
+  const { isAuthenticated, role } = useAuth();
   const location = useLocation();
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  if (allowedRoles && allowedRoles.length > 0 && (!role || !allowedRoles.includes(role))) {
+    const fallbackDest = role === 'ADMIN' ? '/admin' : role === 'TRAINER' ? '/trainer' : '/student';
+    return <Navigate to={fallbackDest} replace />;
   }
 
   return <Outlet />;

@@ -24,7 +24,7 @@ const formatTimeAgo = (dateStr) => {
 };
 
 const SkeletonCard = () => (
-  <Paper elevation={0} sx={{ p: 2.5, borderRadius: 3 }}>
+  <Paper elevation={0} sx={{ p: 2.5, borderRadius: 3, bgcolor: '#FFFFFF', border: '1px solid', borderColor: 'divider' }}>
     <Skeleton variant="text" width={80} sx={{ mb: 1 }} />
     <Skeleton variant="text" width={60} height={40} />
     <Skeleton variant="text" width={100} />
@@ -40,26 +40,26 @@ const DEFAULT_STUDENT_DATA = {
   personalBestStreak: 7,
   pendingCount: 0,
   weeklyActivity: [
-    { day: 'Mon', submissions: 2 },
-    { day: 'Tue', submissions: 5 },
-    { day: 'Wed', submissions: 3 },
-    { day: 'Thu', submissions: 6 },
-    { day: 'Fri', submissions: 4 },
-    { day: 'Sat', submissions: 1 },
-    { day: 'Sun', submissions: 3 },
+    { day: 'Mon', count: 2 },
+    { day: 'Tue', count: 5 },
+    { day: 'Wed', count: 3 },
+    { day: 'Thu', count: 6 },
+    { day: 'Fri', count: 4 },
+    { day: 'Sat', count: 1 },
+    { day: 'Sun', count: 3 },
   ],
   upcomingEvents: [
-    { id: '1', title: 'Weekly Arena Contest #12', type: 'CONTEST', date: 'In 2 days', duration: '90 mins' },
+    { id: '1', title: 'Weekly Arena Contest #12', type: 'CONTEST', when: 'In 2 days', duration: '90 mins' },
   ],
   recentSubmissions: [
-    { id: 's1', problemTitle: 'Two Sum', language: 'javascript', status: 'ACCEPTED', submittedAt: new Date().toISOString() },
-    { id: 's2', problemTitle: 'Valid Parentheses', language: 'python', status: 'ACCEPTED', submittedAt: new Date(Date.now() - 3600000).toISOString() },
+    { id: 's1', problemTitle: 'Two Sum', language: 'javascript', verdict: 'ACCEPTED', createdAt: new Date().toISOString() },
+    { id: 's2', problemTitle: 'Valid Parentheses', language: 'python', verdict: 'ACCEPTED', createdAt: new Date(Date.now() - 3600000).toISOString() },
   ],
   skillProgress: [
-    { topic: 'Arrays & Strings', solved: 8, total: 20 },
-    { topic: 'Trees & Graphs', solved: 4, total: 15 },
-    { topic: 'Dynamic Programming', solved: 3, total: 12 },
-    { topic: 'Data Structures', solved: 3, total: 18 },
+    { label: 'Arrays & Strings', percentage: 40 },
+    { label: 'Trees & Graphs', percentage: 27 },
+    { label: 'Dynamic Programming', percentage: 25 },
+    { label: 'Data Structures', percentage: 17 },
   ],
 };
 
@@ -101,43 +101,44 @@ const StudentDashboard = () => {
   }
 
   const activityData = {
-    labels: data.weeklyActivity.map((a) => a.day),
+    labels: (data.weeklyActivity || []).map((a) => a.day),
     datasets: [
       {
         label: 'Problems solved',
-        data: data.weeklyActivity.map((a) => a.count),
-        borderColor: '#FFB020',
-        backgroundColor: 'rgba(255,176,32,0.12)',
+        data: (data.weeklyActivity || []).map((a) => (a.count !== undefined ? a.count : a.submissions || 0)),
+        borderColor: '#F59E0B',
+        backgroundColor: 'rgba(245, 158, 11, 0.08)',
         tension: 0.35,
         fill: true,
-        pointRadius: 3,
+        pointRadius: 4,
+        pointBackgroundColor: '#F59E0B',
       },
     ],
   };
 
   return (
     <Box>
-      <Typography variant="h4" sx={{ fontSize: '1.6rem', mb: 0.5 }}>
+      <Typography variant="h4" sx={{ fontSize: '1.6rem', mb: 0.5, color: '#0F172A', fontWeight: 800 }}>
         Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
       </Typography>
       <Typography sx={{ color: 'text.secondary', mb: 4 }}>Here's where you stand today.</Typography>
 
       <Grid container spacing={2.5} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={4} md={4}>
-          <StatCard label="Solved" value={data.solvedCount} sublabel={`of ${data.totalProblemsCount} problems`} icon={CheckCircleRoundedIcon} accent="success.main" />
+          <StatCard label="Solved" value={data.solvedCount || 0} sublabel={`of ${data.totalProblemsCount || 0} problems`} icon={CheckCircleRoundedIcon} accent="#10B981" />
         </Grid>
         <Grid item xs={12} sm={4} md={4}>
-          <StatCard label="Streak" value={`${data.streakDays} days`} sublabel={`Personal best: ${data.personalBestStreak}`} icon={LocalFireDepartmentRoundedIcon} accent="#FB6467" />
+          <StatCard label="Streak" value={`${data.streakDays || 0} days`} sublabel={`Personal best: ${data.personalBestStreak || 0}`} icon={LocalFireDepartmentRoundedIcon} accent="#EF4444" />
         </Grid>
         <Grid item xs={12} sm={4} md={4}>
-          <StatCard label="Upcoming" value={data.pendingCount} sublabel="Quizzes & tests" icon={AssignmentLateRoundedIcon} accent="secondary.main" />
+          <StatCard label="Upcoming" value={data.pendingCount || 0} sublabel="Quizzes & tests" icon={AssignmentLateRoundedIcon} accent="#7C5CFF" />
         </Grid>
       </Grid>
 
       <Grid container spacing={2.5}>
         <Grid item xs={12} md={7}>
-          <Paper elevation={0} sx={{ p: 3, borderRadius: 3, height: 340 }}>
-            <Typography variant="h6" sx={{ fontSize: '1rem', mb: 2 }}>This week's activity</Typography>
+          <Paper elevation={0} sx={{ p: 3, borderRadius: 3, height: 340, bgcolor: '#FFFFFF' }}>
+            <Typography variant="h6" sx={{ fontSize: '1rem', mb: 2, fontWeight: 700, color: 'text.primary' }}>This week's activity</Typography>
             <Box sx={{ height: 260 }}>
               <Line data={activityData} options={baseChartOptions} />
             </Box>
@@ -145,17 +146,17 @@ const StudentDashboard = () => {
         </Grid>
 
         <Grid item xs={12} md={5}>
-          <Paper elevation={0} sx={{ p: 3, borderRadius: 3, height: 340, overflow: 'auto' }}>
-            <Typography variant="h6" sx={{ fontSize: '1rem', mb: 2 }}>Upcoming</Typography>
-            {data.upcomingEvents.length > 0 ? (
+          <Paper elevation={0} sx={{ p: 3, borderRadius: 3, height: 340, overflow: 'auto', bgcolor: '#FFFFFF' }}>
+            <Typography variant="h6" sx={{ fontSize: '1rem', mb: 2, fontWeight: 700, color: 'text.primary' }}>Upcoming</Typography>
+            {data.upcomingEvents && data.upcomingEvents.length > 0 ? (
               <Stack spacing={2}>
                 {data.upcomingEvents.map((item) => (
-                  <Box key={item.id || item.title} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Box key={item.id || item.title} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 1.5, borderRadius: 2, bgcolor: '#F8FAFC', border: '1px solid', borderColor: 'divider' }}>
                     <Box>
                       <Typography variant="body2" fontWeight={600}>{item.title}</Typography>
-                      <Typography variant="caption" color="text.secondary">{item.when}</Typography>
+                      <Typography variant="caption" color="text.secondary">{item.when || item.date}</Typography>
                     </Box>
-                    <Chip size="small" label={item.type} />
+                    <Chip size="small" label={item.type} sx={{ bgcolor: '#FFFFFF', border: '1px solid #E2E8F0', fontWeight: 600 }} />
                   </Box>
                 ))}
               </Stack>
@@ -168,17 +169,17 @@ const StudentDashboard = () => {
         </Grid>
 
         <Grid item xs={12} md={7}>
-          <Paper elevation={0} sx={{ p: 3, borderRadius: 3 }}>
-            <Typography variant="h6" sx={{ fontSize: '1rem', mb: 2 }}>Recent submissions</Typography>
-            {data.recentSubmissions.length > 0 ? (
+          <Paper elevation={0} sx={{ p: 3, borderRadius: 3, bgcolor: '#FFFFFF' }}>
+            <Typography variant="h6" sx={{ fontSize: '1rem', mb: 2, fontWeight: 700, color: 'text.primary' }}>Recent submissions</Typography>
+            {data.recentSubmissions && data.recentSubmissions.length > 0 ? (
               <Stack spacing={1.5}>
                 {data.recentSubmissions.map((s, i) => (
-                  <Box key={s.id || i} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 1, borderBottom: i < data.recentSubmissions.length - 1 ? '1px solid' : 'none', borderColor: 'divider' }}>
+                  <Box key={s.id || i} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 1.25, borderBottom: i < data.recentSubmissions.length - 1 ? '1px solid' : 'none', borderColor: 'divider' }}>
                     <Box>
-                      <Typography variant="body2" fontWeight={600}>{s.problemTitle}</Typography>
-                      <Typography variant="caption" color="text.secondary">{s.language} · {formatTimeAgo(s.createdAt)}</Typography>
+                      <Typography variant="body2" fontWeight={600} color="text.primary">{s.problemTitle}</Typography>
+                      <Typography variant="caption" color="text.secondary">{s.language} · {formatTimeAgo(s.createdAt || s.submittedAt)}</Typography>
                     </Box>
-                    <VerdictChip verdict={s.verdict} />
+                    <VerdictChip verdict={s.verdict || s.status} />
                   </Box>
                 ))}
               </Stack>
@@ -191,19 +192,32 @@ const StudentDashboard = () => {
         </Grid>
 
         <Grid item xs={12} md={5}>
-          <Paper elevation={0} sx={{ p: 3, borderRadius: 3 }}>
-            <Typography variant="h6" sx={{ fontSize: '1rem', mb: 2 }}>Skill progress</Typography>
-            {data.skillProgress.length > 0 ? (
+          <Paper elevation={0} sx={{ p: 3, borderRadius: 3, bgcolor: '#FFFFFF' }}>
+            <Typography variant="h6" sx={{ fontSize: '1rem', mb: 2, fontWeight: 700, color: 'text.primary' }}>Skill progress</Typography>
+            {data.skillProgress && data.skillProgress.length > 0 ? (
               <Stack spacing={2}>
-                {data.skillProgress.map((skill) => (
-                  <Box key={skill.label}>
-                    <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
-                      <Typography variant="body2">{skill.label}</Typography>
-                      <Typography variant="caption" color="text.secondary">{skill.percentage}%</Typography>
-                    </Stack>
-                    <LinearProgress variant="determinate" value={Math.min(skill.percentage, 100)} sx={{ height: 6, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.06)' }} />
-                  </Box>
-                ))}
+                {data.skillProgress.map((skill, idx) => {
+                  const label = skill.label || skill.tag || skill.topic || `Topic ${idx + 1}`;
+                  const pct = skill.percentage !== undefined ? skill.percentage : (skill.percent !== undefined ? skill.percent : (skill.total ? Math.round((skill.solved / skill.total) * 100) : 0));
+                  return (
+                    <Box key={label}>
+                      <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
+                        <Typography variant="body2" fontWeight={500} color="text.primary">{label}</Typography>
+                        <Typography variant="caption" color="text.secondary" fontWeight={600}>{pct}%</Typography>
+                      </Stack>
+                      <LinearProgress
+                        variant="determinate"
+                        value={Math.min(pct, 100)}
+                        sx={{
+                          height: 7,
+                          borderRadius: 3,
+                          bgcolor: '#F1F5F9',
+                          '& .MuiLinearProgress-bar': { bgcolor: '#F59E0B', borderRadius: 3 },
+                        }}
+                      />
+                    </Box>
+                  );
+                })}
               </Stack>
             ) : (
               <Typography variant="body2" color="text.secondary" sx={{ mt: 2, textAlign: 'center' }}>

@@ -4,30 +4,31 @@
    CodeArena Design Tokens
    Palette: near-black "arena floor" ink, with a two-color signature —
    amber (rank/gold, primary actions) and violet (secondary, live/active
-   states). Monospace display type reinforces the coding-platform identity;
-   Inter carries body copy for readability at length.
+   states). Inter carries display and body type for a clean, professional
+   finish; JetBrains Mono is reserved for data (scores, ranks, code) to
+   keep the coding-platform identity.
    ========================================================================== */
 :root {
-  --ca-ink: #0a0e14;
-  --ca-surface: #121822;
-  --ca-surface-2: #1a2230;
-  --ca-line: #232c3a;
-  --ca-line-soft: #1b2331;
+  --ca-ink: #f8fafc;
+  --ca-surface: #ffffff;
+  --ca-surface-2: #f1f5f9;
+  --ca-line: #e2e8f0;
+  --ca-line-soft: #edf2f7;
 
-  --ca-text: #e8edf4;
-  --ca-text-muted: #8c9aae;
-  --ca-text-faint: #56637a;
+  --ca-text: #0f172a;
+  --ca-text-muted: #64748b;
+  --ca-text-faint: #94a3b8;
 
-  --ca-amber: #ffb020;
-  --ca-amber-dim: #a97418;
+  --ca-amber: #f59e0b;
+  --ca-amber-dim: #d97706;
   --ca-violet: #7c5cff;
-  --ca-violet-dim: #4c3aa0;
+  --ca-violet-dim: #6366f1;
 
-  --ca-emerald: #34d399;
-  --ca-rose: #fb6467;
-  --ca-sky: #38bdf8;
+  --ca-emerald: #10b981;
+  --ca-rose: #ef4444;
+  --ca-sky: #0284c7;
 
-  --ca-font-display: 'JetBrains Mono', ui-monospace, monospace;
+  --ca-font-display: 'Inter', system-ui, -apple-system, sans-serif;
   --ca-font-body: 'Inter', system-ui, -apple-system, sans-serif;
   --ca-font-mono: 'JetBrains Mono', ui-monospace, 'Courier New', monospace;
 
@@ -35,7 +36,7 @@
   --ca-radius-md: 10px;
   --ca-radius-lg: 16px;
 
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 * {
@@ -55,14 +56,14 @@ body {
   font-family: var(--ca-font-body);
   -webkit-font-smoothing: antialiased;
   background-image:
-    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(124, 92, 255, 0.14), transparent 60%),
-    radial-gradient(ellipse 700px 500px at 100% 0%, rgba(255, 176, 32, 0.10), transparent 55%);
+    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(124, 92, 255, 0.04), transparent 60%),
+    radial-gradient(ellipse 700px 500px at 100% 0%, rgba(245, 158, 11, 0.05), transparent 55%);
   background-attachment: fixed;
 }
 
 ::selection {
-  background: rgba(255, 176, 32, 0.25);
-  color: #fff;
+  background: rgba(245, 158, 11, 0.2);
+  color: #0f172a;
 }
 
 /* Visible keyboard focus everywhere — accessibility floor */
@@ -78,18 +79,18 @@ a {
 }
 
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--ca-line);
+  background: #cbd5e1;
   border-radius: 8px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--ca-text-faint);
+  background: #94a3b8;
 }
 
 .font-display {
@@ -109,7 +110,7 @@ a {
   }
 }
 .ca-ticker-track {
-  animation: ca-ticker-scroll 14s linear infinite;
+  animation: ca-ticker-scroll 16s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {

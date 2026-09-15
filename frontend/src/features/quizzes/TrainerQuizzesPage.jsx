@@ -28,9 +28,9 @@ import ScheduleRoundedIcon from '@mui/icons-material/ScheduleRounded';
 import quizService from '@/services/quizService';
 
 const STATUS_STYLE = {
-  LIVE: { label: 'Live now', color: '#34D399' },
-  UPCOMING: { label: 'Upcoming', color: '#38BDF8' },
-  ENDED: { label: 'Ended', color: '#8C9AAE' },
+  LIVE: { label: 'Live Now', color: '#15803D', bgcolor: '#DCFCE7', border: '1px solid #BBF7D0' },
+  UPCOMING: { label: 'Upcoming', color: '#0284C7', bgcolor: '#E0F2FE', border: '1px solid #BAE6FD' },
+  ENDED: { label: 'Ended', color: '#64748B', bgcolor: '#F1F5F9', border: '1px solid #E2E8F0' },
 };
 
 const TrainerQuizzesPage = () => {
@@ -155,19 +155,26 @@ const TrainerQuizzesPage = () => {
 
   return (
     <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} gap={2} sx={{ mb: 3.5 }}>
         <Box>
-          <Typography variant="h4" sx={{ fontSize: '1.6rem', mb: 0.5 }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: '#0F172A', mb: 0.5 }}>
             Tests & Assessments
           </Typography>
-          <Typography sx={{ color: 'text.secondary' }}>
-            Create auto-graded tests with MCQ answer keys and duration settings.
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            Create auto-graded assessments with MCQ answer keys, timer controls, and instant scoring.
           </Typography>
         </Box>
         <Button
           variant="contained"
           startIcon={<AddRoundedIcon />}
           onClick={() => setOpenModal(true)}
+          sx={{
+            fontWeight: 700,
+            textTransform: 'none',
+            px: 2.5,
+            py: 1,
+            boxShadow: '0 2px 8px rgba(245, 158, 11, 0.25)',
+          }}
         >
           Create New Test
         </Button>
@@ -177,7 +184,7 @@ const TrainerQuizzesPage = () => {
         <Typography color="error">{error}</Typography>
       ) : loading ? (
         <Grid container spacing={2.5}>
-          {[1, 2, 3].map((i) => (
+          {[1, 2, 3, 4].map((i) => (
             <Grid item xs={12} md={6} key={i}>
               <Skeleton variant="rounded" height={180} sx={{ borderRadius: 3 }} />
             </Grid>
@@ -186,16 +193,32 @@ const TrainerQuizzesPage = () => {
       ) : quizzes.length > 0 ? (
         <Grid container spacing={2.5}>
           {quizzes.map((q) => {
-            const style = STATUS_STYLE[q.status] || STATUS_STYLE.LIVE;
+            const statusKey = q.status || 'LIVE';
+            const style = STATUS_STYLE[statusKey] || STATUS_STYLE.LIVE;
+            const qCount = q.questionsCount ?? q.questionCount ?? (q.questions ? q.questions.length : 10);
+
             return (
               <Grid item xs={12} md={6} key={q.id}>
-                <Paper elevation={0} sx={{ p: 3, borderRadius: 3 }}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 3,
+                    borderRadius: 3,
+                    bgcolor: '#FFFFFF',
+                    border: '1px solid #E2E8F0',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)',
+                      borderColor: '#CBD5E1',
+                    },
+                  }}
+                >
                   <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 1.5 }}>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontSize: '1.1rem', mb: 0.5 }}>
+                    <Box sx={{ pr: 2 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#0F172A', fontSize: '1.05rem', mb: 0.5 }}>
                         {q.title}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="body2" sx={{ color: '#64748B', lineHeight: 1.6 }}>
                         {q.description || 'No description provided.'}
                       </Typography>
                     </Box>
@@ -203,28 +226,41 @@ const TrainerQuizzesPage = () => {
                       <Chip
                         size="small"
                         label={style.label}
-                        sx={{ color: style.color, bgcolor: `${style.color}1F`, fontWeight: 600 }}
+                        sx={{
+                          color: style.color,
+                          bgcolor: style.bgcolor,
+                          border: style.border,
+                          fontWeight: 700,
+                          fontSize: '0.75rem',
+                          height: 24,
+                        }}
                       />
                       <IconButton
                         size="small"
-                        color="error"
                         title="Delete Test"
                         onClick={() => setDeleteTargetId(q.id)}
-                        sx={{ ml: 0.5 }}
+                        sx={{
+                          color: '#94A3B8',
+                          '&:hover': { color: '#DC2626', bgcolor: '#FEE2E2' },
+                        }}
                       >
                         <DeleteOutlineRoundedIcon fontSize="small" />
                       </IconButton>
                     </Stack>
                   </Stack>
 
-                  <Stack direction="row" spacing={2} sx={{ mt: 2, color: 'text.secondary' }}>
-                    <Stack direction="row" spacing={0.5} alignItems="center">
-                      <QuizRoundedIcon sx={{ fontSize: 16 }} />
-                      <Typography variant="caption">{q.questionCount} Questions ({q.totalMarks} Marks)</Typography>
+                  <Stack direction="row" spacing={2.5} sx={{ mt: 2.5, color: '#64748B' }}>
+                    <Stack direction="row" spacing={0.75} alignItems="center">
+                      <QuizRoundedIcon sx={{ fontSize: 18, color: '#94A3B8' }} />
+                      <Typography variant="body2" sx={{ fontWeight: 500, color: '#475569' }}>
+                        {qCount} Questions ({q.totalMarks || (qCount * 5)} Marks)
+                      </Typography>
                     </Stack>
-                    <Stack direction="row" spacing={0.5} alignItems="center">
-                      <ScheduleRoundedIcon sx={{ fontSize: 16 }} />
-                      <Typography variant="caption">{q.durationMinutes} Mins Duration</Typography>
+                    <Stack direction="row" spacing={0.75} alignItems="center">
+                      <ScheduleRoundedIcon sx={{ fontSize: 18, color: '#94A3B8' }} />
+                      <Typography variant="body2" sx={{ fontWeight: 500, color: '#475569' }}>
+                        {q.durationMinutes} Mins Duration
+                      </Typography>
                     </Stack>
                   </Stack>
                 </Paper>
@@ -233,26 +269,52 @@ const TrainerQuizzesPage = () => {
           })}
         </Grid>
       ) : (
-        <Paper elevation={0} sx={{ p: 6, borderRadius: 3, textAlign: 'center' }}>
-          <Typography color="text.secondary" sx={{ mb: 2 }}>
-            No tests created yet. Click "Create New Test" to get started!
+        <Paper elevation={0} sx={{ p: 6, borderRadius: 3, textAlign: 'center', bgcolor: '#FFFFFF', border: '1px solid #E2E8F0' }}>
+          <Typography sx={{ color: '#64748B', mb: 2, fontWeight: 500 }}>
+            No assessments created yet. Click "Create New Test" to build your first quiz!
           </Typography>
-          <Button variant="outlined" startIcon={<AddRoundedIcon />} onClick={() => setOpenModal(true)}>
+          <Button
+            variant="outlined"
+            startIcon={<AddRoundedIcon />}
+            onClick={() => setOpenModal(true)}
+            sx={{
+              fontWeight: 600,
+              textTransform: 'none',
+              borderColor: '#CBD5E1',
+              color: '#334155',
+            }}
+          >
             Create New Test
           </Button>
         </Paper>
       )}
 
       {/* Create Test Modal */}
-      <Dialog open={openModal} onClose={() => setOpenModal(false)} maxWidth="md" fullWidth>
+      <Dialog
+        open={openModal}
+        onClose={() => setOpenModal(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            bgcolor: '#FFFFFF',
+            border: '1px solid #E2E8F0',
+            boxShadow: '0 20px 40px rgba(15, 23, 42, 0.12)',
+          },
+        }}
+      >
         <form onSubmit={handleCreateQuiz}>
-          <DialogTitle>Create New Auto-Graded Test</DialogTitle>
-          <DialogContent dividers>
-            <Stack spacing={2.5}>
+          <DialogTitle sx={{ fontWeight: 700, color: '#0F172A', pb: 1 }}>
+            Create New Auto-Graded Assessment
+          </DialogTitle>
+          <DialogContent dividers sx={{ borderColor: '#E2E8F0' }}>
+            <Stack spacing={2.5} sx={{ pt: 1 }}>
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={8}>
                   <TextField
                     label="Test Title"
+                    placeholder="e.g., Dynamic Programming & Graph Theory Core"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     required
@@ -273,6 +335,7 @@ const TrainerQuizzesPage = () => {
 
               <TextField
                 label="Description / Instructions"
+                placeholder="Guidelines or syllabus covered in this assessment..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 multiline
@@ -280,18 +343,33 @@ const TrainerQuizzesPage = () => {
                 fullWidth
               />
 
-              <Divider sx={{ my: 1 }} />
-              <Typography variant="h6" sx={{ fontSize: '1rem' }}>Questions & Correct MCQ Answers</Typography>
+              <Divider sx={{ my: 1, borderColor: '#E2E8F0' }} />
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#0F172A' }}>
+                Questions & Correct Answer Keys
+              </Typography>
 
               {questions.map((q, qIndex) => (
-                <Paper key={qIndex} variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}>
+                <Paper
+                  key={qIndex}
+                  elevation={0}
+                  sx={{
+                    p: 2.5,
+                    borderRadius: 2.5,
+                    bgcolor: '#F8FAFC',
+                    border: '1px solid #E2E8F0',
+                  }}
+                >
                   <Stack spacing={2}>
                     <Stack direction="row" justifyContent="space-between" alignItems="center">
-                      <Typography variant="subtitle2" color="primary" fontWeight={700}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#D97706' }}>
                         Question {qIndex + 1}
                       </Typography>
                       {questions.length > 1 && (
-                        <IconButton size="small" color="error" onClick={() => handleRemoveQuestion(qIndex)}>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleRemoveQuestion(qIndex)}
+                          sx={{ color: '#94A3B8', '&:hover': { color: '#DC2626', bgcolor: '#FEE2E2' } }}
+                        >
                           <DeleteOutlineRoundedIcon fontSize="small" />
                         </IconButton>
                       )}
@@ -301,11 +379,13 @@ const TrainerQuizzesPage = () => {
                       <Grid item xs={12} sm={9}>
                         <TextField
                           label="Question Text"
+                          placeholder="State the question clearly..."
                           value={q.questionText}
                           onChange={(e) => handleQuestionChange(qIndex, 'questionText', e.target.value)}
                           required
                           fullWidth
                           size="small"
+                          sx={{ bgcolor: '#FFFFFF' }}
                         />
                       </Grid>
                       <Grid item xs={12} sm={3}>
@@ -317,13 +397,14 @@ const TrainerQuizzesPage = () => {
                           required
                           fullWidth
                           size="small"
+                          sx={{ bgcolor: '#FFFFFF' }}
                         />
                       </Grid>
                     </Grid>
 
                     <FormControl component="fieldset">
-                      <FormLabel component="legend" sx={{ fontSize: '0.85rem', mb: 1, color: 'text.primary', fontWeight: 600 }}>
-                        Options — Select the radio button for the Correct Answer:
+                      <FormLabel component="legend" sx={{ fontSize: '0.85rem', mb: 1, color: '#475569', fontWeight: 600 }}>
+                        Options — Click the radio button corresponding to the Correct Answer:
                       </FormLabel>
                       <RadioGroup
                         value={Number(q.correctOptionIndex)}
@@ -335,19 +416,29 @@ const TrainerQuizzesPage = () => {
                             return (
                               <Grid item xs={12} sm={6} key={oIndex}>
                                 <Paper
-                                  variant="outlined"
+                                  elevation={0}
                                   sx={{
                                     p: 1,
                                     px: 1.5,
                                     borderRadius: 2,
-                                    borderColor: isCorrect ? 'success.main' : 'divider',
-                                    bgcolor: isCorrect ? 'rgba(52,211,153,0.08)' : 'transparent',
+                                    border: '1px solid',
+                                    borderColor: isCorrect ? '#86EFAC' : '#E2E8F0',
+                                    bgcolor: isCorrect ? '#F0FDF4' : '#FFFFFF',
+                                    transition: 'all 0.15s ease',
                                   }}
                                 >
                                   <Stack direction="row" alignItems="center" spacing={1}>
                                     <FormControlLabel
                                       value={oIndex}
-                                      control={<Radio size="small" color="success" />}
+                                      control={
+                                        <Radio
+                                          size="small"
+                                          sx={{
+                                            color: '#94A3B8',
+                                            '&.Mui-checked': { color: '#16A34A' },
+                                          }}
+                                        />
+                                      }
                                       label=""
                                       sx={{ mr: 0 }}
                                     />
@@ -358,13 +449,24 @@ const TrainerQuizzesPage = () => {
                                       required
                                       fullWidth
                                       size="small"
+                                      sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                          bgcolor: '#FFFFFF',
+                                        },
+                                      }}
                                     />
                                     {isCorrect && (
                                       <Chip
                                         size="small"
-                                        label="Correct Answer"
-                                        color="success"
-                                        sx={{ height: 24, fontSize: '0.7rem' }}
+                                        label="Correct"
+                                        sx={{
+                                          height: 24,
+                                          fontSize: '0.7rem',
+                                          fontWeight: 700,
+                                          bgcolor: '#DCFCE7',
+                                          color: '#15803D',
+                                          border: '1px solid #BBF7D0',
+                                        }}
                                       />
                                     )}
                                   </Stack>
@@ -383,31 +485,63 @@ const TrainerQuizzesPage = () => {
                 variant="outlined"
                 startIcon={<AddRoundedIcon />}
                 onClick={handleAddQuestion}
-                sx={{ alignSelf: 'flex-start' }}
+                sx={{
+                  alignSelf: 'flex-start',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  borderColor: '#CBD5E1',
+                  color: '#334155',
+                }}
               >
                 Add Another Question
               </Button>
             </Stack>
           </DialogContent>
-          <DialogActions sx={{ p: 2.5 }}>
-            <Button onClick={() => setOpenModal(false)}>Cancel</Button>
-            <Button type="submit" variant="contained" disabled={submitting}>
-              {submitting ? 'Creating...' : 'Create Test'}
+          <DialogActions sx={{ p: 2.5, gap: 1 }}>
+            <Button onClick={() => setOpenModal(false)} sx={{ color: '#64748B', fontWeight: 600, textTransform: 'none' }}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={submitting}
+              sx={{
+                fontWeight: 700,
+                textTransform: 'none',
+                px: 3,
+                boxShadow: '0 2px 8px rgba(245, 158, 11, 0.25)',
+              }}
+            >
+              {submitting ? 'Creating Test...' : 'Save & Publish Test'}
             </Button>
           </DialogActions>
         </form>
       </Dialog>
 
       {/* Delete Test Confirmation Modal */}
-      <Dialog open={Boolean(deleteTargetId)} onClose={() => setDeleteTargetId(null)}>
-        <DialogTitle>Delete Test</DialogTitle>
+      <Dialog
+        open={Boolean(deleteTargetId)}
+        onClose={() => setDeleteTargetId(null)}
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            p: 1,
+            bgcolor: '#FFFFFF',
+            border: '1px solid #E2E8F0',
+            boxShadow: '0 12px 32px rgba(15, 23, 42, 0.12)',
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, color: '#0F172A' }}>
+          Delete Assessment?
+        </DialogTitle>
         <DialogContent>
-          <Typography variant="body2" color="text.secondary">
-            Are you sure you want to delete this test? All questions, student attempts, and results for this test will be permanently deleted.
+          <Typography variant="body2" sx={{ color: '#475569' }}>
+            Are you sure you want to delete this test? All questions, student attempts, and automated evaluation reports will be permanently removed.
           </Typography>
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2.5 }}>
-          <Button onClick={() => setDeleteTargetId(null)} disabled={deleting}>
+        <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
+          <Button onClick={() => setDeleteTargetId(null)} disabled={deleting} sx={{ color: '#64748B', fontWeight: 600, textTransform: 'none' }}>
             Cancel
           </Button>
           <Button
@@ -415,6 +549,7 @@ const TrainerQuizzesPage = () => {
             color="error"
             onClick={() => handleDeleteQuiz(deleteTargetId)}
             disabled={deleting}
+            sx={{ fontWeight: 700, textTransform: 'none' }}
           >
             {deleting ? 'Deleting...' : 'Delete Test'}
           </Button>

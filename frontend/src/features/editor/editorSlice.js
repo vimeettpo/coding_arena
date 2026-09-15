@@ -13,7 +13,7 @@ const loadPrefs = () => {
 
 const initialState = {
   language: 'java',
-  monacoTheme: 'ca-dark',
+  monacoTheme: 'ca-light',
   fontSize: 14,
   autoSave: true,
   splitScreen: true,

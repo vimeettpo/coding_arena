@@ -98,23 +98,33 @@ const LoginPage = () => {
 
   return (
     <Container maxWidth="xs" sx={{ py: { xs: 8, md: 12 } }}>
-      <Paper elevation={0} sx={{ p: 4, borderRadius: 4, bgcolor: 'background.paper' }}>
-        <Typography variant="h4" sx={{ fontSize: '1.5rem', mb: 0.5 }}>Sign in</Typography>
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 3, sm: 4 },
+          borderRadius: 4,
+          bgcolor: '#FFFFFF',
+          border: '1px solid',
+          borderColor: 'divider',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03)',
+        }}
+      >
+        <Typography variant="h4" sx={{ fontSize: '1.5rem', mb: 0.5, color: '#0F172A', fontWeight: 800 }}>Sign in</Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2.5 }}>
-          Enter any credentials to sign in directly.
+          Enter your credentials to access your workspace.
         </Typography>
 
         {location.state?.registered && (
-          <Alert severity="success" sx={{ mb: 2 }}>
+          <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>
             Account created successfully! Please sign in.
           </Alert>
         )}
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {error && <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{error}</Alert>}
 
         <Box component="form" onSubmit={handleSubmit}>
           <Stack spacing={2.5}>
             <Box>
-              <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.8, display: 'block' }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.8, display: 'block', fontWeight: 600 }}>
                 Sign in as:
               </Typography>
               <ToggleButtonGroup
@@ -124,10 +134,28 @@ const LoginPage = () => {
                 value={form.role}
                 onChange={handleRoleChange}
                 sx={{
+                  bgcolor: '#F1F5F9',
+                  p: 0.5,
+                  borderRadius: 2.5,
+                  border: '1px solid',
+                  borderColor: 'divider',
                   '& .MuiToggleButton-root': {
                     textTransform: 'none',
-                    py: 0.8,
-                    fontWeight: 500,
+                    py: 0.75,
+                    fontWeight: 600,
+                    borderRadius: 2,
+                    border: 'none',
+                    color: 'text.secondary',
+                    transition: 'all 0.15s ease',
+                    '&.Mui-selected': {
+                      bgcolor: '#FFFFFF',
+                      color: '#D97706',
+                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
+                      fontWeight: 700,
+                    },
+                    '&:hover': {
+                      bgcolor: 'rgba(255,255,255,0.6)',
+                    },
                   },
                 }}
               >
@@ -145,6 +173,7 @@ const LoginPage = () => {
               value={form.email}
               onChange={handleChange('email')}
               autoComplete="username"
+              InputLabelProps={{ sx: { color: 'text.secondary' } }}
             />
             <TextField
               label="Password"
@@ -154,6 +183,7 @@ const LoginPage = () => {
               value={form.password}
               onChange={handleChange('password')}
               autoComplete="current-password"
+              InputLabelProps={{ sx: { color: 'text.secondary' } }}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
@@ -166,21 +196,33 @@ const LoginPage = () => {
             />
             <Stack direction="row" alignItems="center" justifyContent="space-between">
               <FormControlLabel
-                control={<Checkbox size="small" checked={form.rememberMe} onChange={handleChange('rememberMe')} />}
-                label={<Typography variant="body2">Remember me</Typography>}
+                control={<Checkbox size="small" checked={form.rememberMe} onChange={handleChange('rememberMe')} sx={{ color: 'text.secondary' }} />}
+                label={<Typography variant="body2" sx={{ color: 'text.primary' }}>Remember me</Typography>}
               />
-              <Link component={RouterLink} to="/forgot-password" variant="body2">
+              <Link component={RouterLink} to="/forgot-password" variant="body2" sx={{ color: '#D97706', fontWeight: 600 }}>
                 Forgot password?
               </Link>
             </Stack>
-            <Button type="submit" variant="contained" size="large" disabled={status === 'loading'}>
+            <Button
+              type="submit"
+              variant="contained"
+              size="large"
+              disabled={status === 'loading'}
+              sx={{
+                fontWeight: 700,
+                py: 1.25,
+                bgcolor: '#F59E0B',
+                color: '#0F172A',
+                '&:hover': { bgcolor: '#E58E00' },
+              }}
+            >
               {status === 'loading' ? 'Signing in…' : 'Sign in'}
             </Button>
           </Stack>
         </Box>
 
         <Divider sx={{ my: 3 }}>
-          <Typography variant="caption" sx={{ color: 'text.secondary' }}>or continue with</Typography>
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>or continue with</Typography>
         </Divider>
 
         <Stack direction="row" spacing={1.5}>
@@ -190,7 +232,7 @@ const LoginPage = () => {
             color="inherit"
             startIcon={<GoogleIcon />}
             onClick={() => handleSocialLogin('google')}
-            sx={{ borderColor: 'divider' }}
+            sx={{ borderColor: 'divider', color: 'text.primary', fontWeight: 600, py: 1 }}
           >
             Google
           </Button>
@@ -200,7 +242,7 @@ const LoginPage = () => {
             color="inherit"
             startIcon={<GitHubIcon />}
             onClick={() => handleSocialLogin('github')}
-            sx={{ borderColor: 'divider' }}
+            sx={{ borderColor: 'divider', color: 'text.primary', fontWeight: 600, py: 1 }}
           >
             GitHub
           </Button>
@@ -208,7 +250,7 @@ const LoginPage = () => {
 
         <Typography variant="body2" sx={{ textAlign: 'center', mt: 3, color: 'text.secondary' }}>
           New to CodeArena?{' '}
-          <Link component={RouterLink} to="/register">Create an account</Link>
+          <Link component={RouterLink} to="/register" sx={{ color: '#D97706', fontWeight: 600 }}>Create an account</Link>
         </Typography>
       </Paper>
     </Container>

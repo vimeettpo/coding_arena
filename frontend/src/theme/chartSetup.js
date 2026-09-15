@@ -23,8 +23,8 @@ ChartJS.register(
   Filler
 );
 
-export const chartTextColor = '#8C9AAE';
-export const chartGridColor = 'rgba(35,44,58,0.6)';
+export const chartTextColor = '#64748B';
+export const chartGridColor = '#F1F5F9';
 
 export const baseChartOptions = {
   responsive: true,
@@ -34,11 +34,13 @@ export const baseChartOptions = {
       labels: { color: chartTextColor, font: { family: 'Inter', size: 11 } },
     },
     tooltip: {
-      backgroundColor: '#1A2230',
-      borderColor: '#232C3A',
+      backgroundColor: '#0F172A',
+      borderColor: '#334155',
       borderWidth: 1,
-      titleColor: '#E8EDF4',
-      bodyColor: '#8C9AAE',
+      titleColor: '#F8FAFC',
+      bodyColor: '#CBD5E1',
+      padding: 10,
+      cornerRadius: 8,
     },
   },
   scales: {

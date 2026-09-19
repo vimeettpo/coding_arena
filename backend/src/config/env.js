@@ -9,6 +9,7 @@ const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
   port: parseInt(process.env.PORT || '8080', 10),
 
+  databaseUrl: process.env.DATABASE_URL,
   mongodbUri: process.env.MONGODB_URI,
 
   jwt: {
@@ -30,6 +31,8 @@ const env = {
     cpuLimit: parseFloat(process.env.JUDGE_CPU_LIMIT || '1'),
     pidsLimit: parseInt(process.env.JUDGE_PIDS_LIMIT || '64', 10),
   },
+
+  adminSecretCode: process.env.ADMIN_SECRET_CODE || 'codearena-admin-2026',
 };
 
 module.exports = env;

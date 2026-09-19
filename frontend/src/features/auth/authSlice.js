@@ -2,68 +2,25 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { jwtDecode } from 'jwt-decode';
 import authService from '@/services/authService';
 
-const createFallbackSession = (credentials = {}) => {
-  const email = (credentials.email || 'user@codearena.local').trim();
-  let role = credentials.role;
-  if (!role) {
-    if (email.toLowerCase().includes('admin')) role = 'ADMIN';
-    else if (email.toLowerCase().includes('trainer')) role = 'TRAINER';
-    else role = 'STUDENT';
-  }
-
-  const rawName = credentials.name || (email.includes('@') ? email.split('@')[0] : email) || 'Arena User';
-  const name = rawName.charAt(0).toUpperCase() + rawName.slice(1);
-
-  const payload = {
-    sub: '000000000000000000000001',
-    email: email.includes('@') ? email : `${email}@codearena.local`,
-    role,
-    name,
-    exp: Math.floor(Date.now() / 1000) + 30 * 24 * 3600,
-  };
-
-  const b64 = (obj) => {
-    try {
-      return btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
-    } catch {
-      return btoa(JSON.stringify(obj));
-    }
-  };
-
-  const token = `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64(payload)}.mockSignature`;
-  localStorage.setItem('ca_access_token', token);
-  localStorage.setItem('ca_refresh_token', 'mock_refresh_token');
-
-  return payload;
-};
-
 const readStoredUser = () => {
   const token = localStorage.getItem('ca_access_token');
   if (!token) return null;
   try {
     const decoded = jwtDecode(token);
-    if (decoded.exp && decoded.exp * 1000 < Date.now()) return null;
+    if (decoded.exp && decoded.exp * 1000 < Date.now()) {
+      localStorage.removeItem('ca_access_token');
+      localStorage.removeItem('ca_refresh_token');
+      return null;
+    }
     return {
-      id: decoded.sub || '000000000000000000000001',
-      email: decoded.email || 'user@codearena.local',
+      id: decoded.sub || '00000000-0000-0000-0000-000000000000',
+      email: decoded.email || '',
       role: decoded.role || 'STUDENT',
       name: decoded.name || 'Arena User',
     };
   } catch {
-    try {
-      const parts = token.split('.');
-      if (parts.length >= 2) {
-        const payload = JSON.parse(atob(parts[1]));
-        return {
-          id: payload.sub || '000000000000000000000001',
-          email: payload.email || 'user@codearena.local',
-          role: payload.role || 'STUDENT',
-          name: payload.name || 'Arena User',
-        };
-      }
-    } catch {
-      return null;
-    }
+    localStorage.removeItem('ca_access_token');
+    localStorage.removeItem('ca_refresh_token');
     return null;
   }
 };
@@ -74,39 +31,57 @@ const initialState = {
   error: null,
 };
 
-export const login = createAsyncThunk('auth/login', async (credentials = {}) => {
+export const login = createAsyncThunk('auth/login', async (credentials = {}, { rejectWithValue }) => {
   try {
     const response = await authService.login(credentials);
-    const { accessToken, refreshToken } = response.data;
+    const { accessToken, refreshToken, user } = response.data;
     localStorage.setItem('ca_access_token', accessToken);
-    localStorage.setItem('ca_refresh_token', refreshToken);
+    if (refreshToken) {
+      localStorage.setItem('ca_refresh_token', refreshToken);
+    }
     const decoded = jwtDecode(accessToken);
     return {
-      sub: decoded.sub || '000000000000000000000001',
-      email: decoded.email || credentials.email || 'user@codearena.local',
-      role: credentials.role || decoded.role || 'STUDENT',
-      name: decoded.name || 'Arena User',
+      id: user?.id || decoded.sub,
+      email: user?.email || decoded.email || credentials.email,
+      role: user?.role || decoded.role || 'STUDENT',
+      name: user?.name || decoded.name || 'Arena User',
     };
-  } catch {
-    // If backend is unavailable or fails, fallback cleanly to local mock session
-    return createFallbackSession(credentials);
+  } catch (err) {
+    const message = err.response?.data?.message || err.message || 'Invalid email or password.';
+    return rejectWithValue(message);
   }
 });
 
-export const register = createAsyncThunk('auth/register', async (payload) => {
+export const register = createAsyncThunk('auth/register', async (payload, { rejectWithValue }) => {
   try {
-    return await authService.register(payload);
-  } catch {
-    return { message: 'Registration acknowledged.' };
+    const response = await authService.register(payload);
+    return response.data || response;
+  } catch (err) {
+    const message = err.response?.data?.message || err.message || 'Registration failed.';
+    return rejectWithValue(message);
   }
 });
 
-export const verifyOtp = createAsyncThunk('auth/verifyOtp', async (payload) => {
+export const fetchCurrentUser = createAsyncThunk('auth/fetchCurrentUser', async (_, { rejectWithValue }) => {
+  const token = localStorage.getItem('ca_access_token');
+  if (!token) return null;
   try {
-    return await authService.verifyOtp(payload);
-  } catch {
-    return { message: 'OTP verified.' };
+    const response = await authService.me();
+    return response.data;
+  } catch (err) {
+    localStorage.removeItem('ca_access_token');
+    localStorage.removeItem('ca_refresh_token');
+    return rejectWithValue(err.response?.data?.message || 'Session expired');
   }
+});
+
+export const logoutUser = createAsyncThunk('auth/logoutUser', async (_, { dispatch }) => {
+  try {
+    await authService.logout();
+  } catch (_e) {
+    // Ignore server error on logout
+  }
+  dispatch(authSlice.actions.logout());
 });
 
 const authSlice = createSlice({
@@ -126,44 +101,46 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Login
       .addCase(login.pending, (state) => {
         state.status = 'loading';
         state.error = null;
       })
       .addCase(login.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.user = {
-          id: action.payload.sub || action.payload.id || '000000000000000000000001',
-          email: action.payload.email,
-          role: action.payload.role,
-          name: action.payload.name,
-        };
+        state.user = action.payload;
+        state.error = null;
       })
       .addCase(login.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
       })
+      // Register
       .addCase(register.pending, (state) => {
         state.status = 'loading';
         state.error = null;
       })
       .addCase(register.fulfilled, (state) => {
         state.status = 'succeeded';
+        state.error = null;
       })
       .addCase(register.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
       })
-      .addCase(verifyOtp.pending, (state) => {
-        state.status = 'loading';
-        state.error = null;
+      // Fetch current user
+      .addCase(fetchCurrentUser.fulfilled, (state, action) => {
+        if (action.payload) {
+          state.user = {
+            id: action.payload.id,
+            email: action.payload.email,
+            role: action.payload.role,
+            name: action.payload.name,
+          };
+        }
       })
-      .addCase(verifyOtp.fulfilled, (state) => {
-        state.status = 'succeeded';
-      })
-      .addCase(verifyOtp.rejected, (state, action) => {
-        state.status = 'failed';
-        state.error = action.payload;
+      .addCase(fetchCurrentUser.rejected, (state) => {
+        state.user = null;
       });
   },
 });

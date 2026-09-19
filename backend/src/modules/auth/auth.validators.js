@@ -1,26 +1,22 @@
 const { z } = require('zod');
 
-// Mirrors RegisterRequest's @Pattern: at least 8 chars, a number, a symbol.
+// At least 8 characters
 const passwordRule = z
   .string()
-  .min(8, 'Password must be at least 8 characters and include a number and a symbol.')
-  .max(72)
-  .regex(
-    /^(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}$/,
-    'Password must be at least 8 characters and include a number and a symbol.'
-  );
+  .min(8, 'Password must be at least 8 characters.');
 
 const registerSchema = z.object({
-  name: z.string().min(2).max(120),
-  email: z.string().email(),
+  name: z.string().min(2, 'Name must be at least 2 characters.').max(120),
+  email: z.string().email('Please enter a valid email address.'),
   password: passwordRule,
-  role: z.enum(['STUDENT', 'TRAINER']), // ADMIN cannot self-register — enforced again in the service
+  role: z.enum(['STUDENT', 'TRAINER']).optional().default('STUDENT'),
   college: z.string().optional().nullable(),
+  username: z.string().optional(),
 });
 
 const loginSchema = z.object({
-  email: z.string().min(1),
-  password: z.string().optional().default(''),
+  email: z.string().min(1, 'Email or username is required.'),
+  password: z.string().min(1, 'Password is required.'),
 });
 
 const verifyOtpSchema = z.object({
@@ -39,7 +35,7 @@ const resetPasswordSchema = z.object({
 });
 
 const refreshTokenSchema = z.object({
-  refreshToken: z.string().min(1),
+  refreshToken: z.string().min(1, 'Refresh token is required.'),
 });
 
 module.exports = {

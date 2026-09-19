@@ -1,4 +1,7 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useAppDispatch } from '@/app/hooks';
+import { fetchCurrentUser } from '@/features/auth/authSlice';
 
 import PublicLayout from '@/components/layout/PublicLayout';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -26,6 +29,13 @@ import QuizAttemptPage from '@/features/quizzes/QuizAttemptPage';
 import ComingSoon from '@/components/common/ComingSoon';
 
 function App() {
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    if (localStorage.getItem('ca_access_token')) {
+      dispatch(fetchCurrentUser());
+    }
+  }, [dispatch]);
   return (
     <BrowserRouter>
       <Routes>

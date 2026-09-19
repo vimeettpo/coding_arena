@@ -10,9 +10,14 @@ import {
   Alert,
   Stack,
   Link,
+  IconButton,
+  InputAdornment,
   ToggleButton,
   ToggleButtonGroup,
+  MenuItem,
 } from '@mui/material';
+import Visibility from '@mui/icons-material/VisibilityRounded';
+import VisibilityOff from '@mui/icons-material/VisibilityOffRounded';
 import { useAppDispatch, useAuth } from '@/app/hooks';
 import { register, clearAuthError } from '@/features/auth/authSlice';
 
@@ -20,16 +25,67 @@ const RegisterPage = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { status, error } = useAuth();
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'STUDENT' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'STUDENT', collegeId: '', branch: '', year: '', teachingDomain: '', adminSecretCode: '' });
+  const [showPassword, setShowPassword] = useState(false);
+  const [localError, setLocalError] = useState('');
 
-  const handleChange = (field) => (e) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
+  const handleChange = (field) => (e) => {
+    setForm((prev) => ({ ...prev, [field]: e.target.value }));
+    if (localError) setLocalError('');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     dispatch(clearAuthError());
-    const result = await dispatch(register(form));
+    setLocalError('');
+
+    if (!form.name.trim() || !form.email.trim() || !form.password) {
+      setLocalError('Please fill in all required fields.');
+      return;
+    }
+
+    if (form.role === 'STUDENT' && (!form.collegeId.trim() || !form.branch.trim() || !form.year)) {
+      setLocalError('Please fill in your College ID, Branch, and Year.');
+      return;
+    }
+
+    if (form.role === 'TRAINER' && !form.teachingDomain.trim()) {
+      setLocalError('Please select your Teaching Domain.');
+      return;
+    }
+
+    if (form.role === 'ADMIN' && !form.adminSecretCode.trim()) {
+      setLocalError('Please enter the Admin Secret Code.');
+      return;
+    }
+
+    if (form.password.length < 8) {
+      setLocalError('Password must be at least 8 characters long.');
+      return;
+    }
+
+    const result = await dispatch(
+      register({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        password: form.password,
+        role: form.role,
+        ...(form.role === 'STUDENT' && {
+          collegeId: form.collegeId.trim(),
+          branch: form.branch.trim(),
+          year: form.year,
+        }),
+        ...(form.role === 'TRAINER' && {
+          teachingDomain: form.teachingDomain.trim(),
+        }),
+        ...(form.role === 'ADMIN' && {
+          adminSecretCode: form.adminSecretCode.trim(),
+        }),
+      })
+    );
+
     if (register.fulfilled.match(result)) {
-      navigate('/login', { state: { registered: true, email: form.email } });
+      navigate('/login', { state: { registered: true, email: form.email.trim() } });
     }
   };
 
@@ -48,10 +104,14 @@ const RegisterPage = () => {
       >
         <Typography variant="h4" sx={{ fontSize: '1.5rem', mb: 0.5, color: '#0F172A', fontWeight: 800 }}>Create your account</Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
-          Join as a student to compete, or a trainer to run contests and workshops.
+          Join as a student to compete, a trainer to run contests, or an admin to manage the platform.
         </Typography>
 
-        {error && <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{error}</Alert>}
+        {(error || localError) && (
+          <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+            {localError || error}
+          </Alert>
+        )}
 
         <Box component="form" onSubmit={handleSubmit}>
           <Stack spacing={2.5}>
@@ -85,20 +145,113 @@ const RegisterPage = () => {
             >
               <ToggleButton value="STUDENT">I'm a Student</ToggleButton>
               <ToggleButton value="TRAINER">I'm a Trainer</ToggleButton>
+              <ToggleButton value="ADMIN">I'm an Admin</ToggleButton>
             </ToggleButtonGroup>
 
-            <TextField label="Full name" required fullWidth value={form.name} onChange={handleChange('name')} autoComplete="name" />
-            <TextField label="Email" type="email" required fullWidth value={form.email} onChange={handleChange('email')} autoComplete="email" />
+            <TextField
+              label="Full name"
+              required
+              fullWidth
+              value={form.name}
+              onChange={handleChange('name')}
+              autoComplete="name"
+            />
+            <TextField
+              label="Email"
+              type="email"
+              required
+              fullWidth
+              value={form.email}
+              onChange={handleChange('email')}
+              autoComplete="email"
+            />
             <TextField
               label="Password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               required
               fullWidth
               value={form.password}
               onChange={handleChange('password')}
               autoComplete="new-password"
-              helperText="At least 8 characters, with a number and a symbol."
+              helperText="At least 8 characters."
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={() => setShowPassword((s) => !s)} edge="end" aria-label="Toggle password visibility">
+                      {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
             />
+
+            {/* Student-only fields */}
+            {form.role === 'STUDENT' && (
+              <>
+                <TextField
+                  label="College ID"
+                  required
+                  fullWidth
+                  value={form.collegeId}
+                  onChange={handleChange('collegeId')}
+                  placeholder="e.g. 22CS1001"
+                />
+                <TextField
+                  label="Branch"
+                  required
+                  fullWidth
+                  select
+                  value={form.branch}
+                  onChange={handleChange('branch')}
+                >
+                  {['CSE', 'ECE', 'EEE', 'ME', 'CE', 'IT', 'AIDS', 'AIML', 'CSD', 'Other'].map((b) => (
+                    <MenuItem key={b} value={b}>{b}</MenuItem>
+                  ))}
+                </TextField>
+                <TextField
+                  label="Year"
+                  required
+                  fullWidth
+                  select
+                  value={form.year}
+                  onChange={handleChange('year')}
+                >
+                  {[1, 2, 3, 4].map((y) => (
+                    <MenuItem key={y} value={y}>Year {y}</MenuItem>
+                  ))}
+                </TextField>
+              </>
+            )}
+
+            {/* Trainer-only fields */}
+            {form.role === 'TRAINER' && (
+              <TextField
+                label="Teaching Domain"
+                required
+                fullWidth
+                select
+                value={form.teachingDomain}
+                onChange={handleChange('teachingDomain')}
+              >
+                {['Python', 'MERN Stack', 'Java Development', 'Robotics', 'Web Development'].map((d) => (
+                  <MenuItem key={d} value={d}>{d}</MenuItem>
+                ))}
+              </TextField>
+            )}
+
+            {/* Admin-only fields */}
+            {form.role === 'ADMIN' && (
+              <TextField
+                label="Admin Secret Code"
+                type="password"
+                required
+                fullWidth
+                value={form.adminSecretCode}
+                onChange={handleChange('adminSecretCode')}
+                placeholder="Enter the admin secret code"
+                helperText="Contact the system owner to obtain the admin secret code."
+              />
+            )}
             <Button
               type="submit"
               variant="contained"

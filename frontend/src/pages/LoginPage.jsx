@@ -31,24 +31,19 @@ const LoginPage = () => {
   const location = useLocation();
   const { status, error } = useAuth();
   const [form, setForm] = useState({
-    email: '',
+    email: location.state?.email || '',
     password: '',
     role: 'STUDENT',
     rememberMe: true,
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [localError, setLocalError] = useState('');
+  const [infoMessage, setInfoMessage] = useState('');
 
   const handleChange = (field) => (e) => {
     const value = field === 'rememberMe' ? e.target.checked : e.target.value;
-    setForm((prev) => {
-      const next = { ...prev, [field]: value };
-      if (field === 'email' && typeof value === 'string') {
-        const lower = value.toLowerCase();
-        if (lower.includes('admin')) next.role = 'ADMIN';
-        else if (lower.includes('trainer')) next.role = 'TRAINER';
-      }
-      return next;
-    });
+    setForm((prev) => ({ ...prev, [field]: value }));
+    if (localError) setLocalError('');
   };
 
   const handleRoleChange = (_, newRole) => {
@@ -60,40 +55,34 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     dispatch(clearAuthError());
+    setLocalError('');
+    setInfoMessage('');
 
-    const chosenRole = form.role || 'STUDENT';
-    const effectiveEmail = form.email.trim() || (
-      chosenRole === 'ADMIN' ? 'admin@codearena.local' : chosenRole === 'TRAINER' ? 'trainer@codearena.local' : 'student@codearena.local'
-    );
-    const effectivePassword = form.password || 'password';
+    const emailOrUsername = form.email.trim();
+    const password = form.password;
+
+    if (!emailOrUsername || !password) {
+      setLocalError('Please enter both your email/username and password.');
+      return;
+    }
 
     const result = await dispatch(
       login({
-        email: effectiveEmail,
-        password: effectivePassword,
-        role: chosenRole,
+        email: emailOrUsername,
+        password: password,
       })
     );
 
-    const userRole = result.payload?.role || chosenRole;
-    const fallbackDest = userRole === 'ADMIN' ? '/admin' : userRole === 'TRAINER' ? '/trainer' : '/student';
-    const dest = location.state?.from?.pathname || fallbackDest;
-    navigate(dest, { replace: true });
+    if (login.fulfilled.match(result)) {
+      const userRole = result.payload?.role || 'STUDENT';
+      const fallbackDest = userRole === 'ADMIN' ? '/admin' : userRole === 'TRAINER' ? '/trainer' : '/student';
+      const dest = location.state?.from?.pathname || fallbackDest;
+      navigate(dest, { replace: true });
+    }
   };
 
   const handleSocialLogin = (provider) => {
-    const chosenRole = form.role || 'STUDENT';
-    dispatch(
-      login({
-        email: `${provider.toLowerCase()}@codearena.local`,
-        password: 'social-login',
-        role: chosenRole,
-      })
-    ).then((result) => {
-      const userRole = result.payload?.role || chosenRole;
-      const fallbackDest = userRole === 'ADMIN' ? '/admin' : userRole === 'TRAINER' ? '/trainer' : '/student';
-      navigate(fallbackDest, { replace: true });
-    });
+    setInfoMessage(`${provider.charAt(0).toUpperCase() + provider.slice(1)} login is disabled in this environment. Please sign in with your email/username and password.`);
   };
 
   return (
@@ -116,10 +105,19 @@ const LoginPage = () => {
 
         {location.state?.registered && (
           <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>
-            Account created successfully! Please sign in.
+            Account created successfully! Please sign in with your credentials.
           </Alert>
         )}
-        {error && <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{error}</Alert>}
+        {(error || localError) && (
+          <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+            {localError || error}
+          </Alert>
+        )}
+        {infoMessage && (
+          <Alert severity="info" sx={{ mb: 2, borderRadius: 2 }} onClose={() => setInfoMessage('')}>
+            {infoMessage}
+          </Alert>
+        )}
 
         <Box component="form" onSubmit={handleSubmit}>
           <Stack spacing={2.5}>
@@ -168,8 +166,9 @@ const LoginPage = () => {
             <TextField
               label="Email or Username"
               type="text"
+              required
               fullWidth
-              placeholder="e.g. admin, student, or any text"
+              placeholder="e.g. your email or username"
               value={form.email}
               onChange={handleChange('email')}
               autoComplete="username"
@@ -178,8 +177,9 @@ const LoginPage = () => {
             <TextField
               label="Password"
               type={showPassword ? 'text' : 'password'}
+              required
               fullWidth
-              placeholder="Any password"
+              placeholder="Enter your password"
               value={form.password}
               onChange={handleChange('password')}
               autoComplete="current-password"
@@ -231,7 +231,7 @@ const LoginPage = () => {
             variant="outlined"
             color="inherit"
             startIcon={<GoogleIcon />}
-            onClick={() => handleSocialLogin('google')}
+            onClick={() => handleSocialLogin('Google')}
             sx={{ borderColor: 'divider', color: 'text.primary', fontWeight: 600, py: 1 }}
           >
             Google
@@ -241,7 +241,7 @@ const LoginPage = () => {
             variant="outlined"
             color="inherit"
             startIcon={<GitHubIcon />}
-            onClick={() => handleSocialLogin('github')}
+            onClick={() => handleSocialLogin('GitHub')}
             sx={{ borderColor: 'divider', color: 'text.primary', fontWeight: 600, py: 1 }}
           >
             GitHub

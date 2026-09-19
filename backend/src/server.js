@@ -1,21 +1,29 @@
 const http = require('http');
 const app = require('./app');
 const env = require('./config/env');
+const { initPostgres } = require('./config/postgres');
 const { connectDB } = require('./config/db');
 const { initSocket } = require('./websocket/socket');
 
 /**
- * Standalone entrypoint — use this for local dev or for hosting on any
- * platform with a persistent process and a Docker daemon (a VM, Render,
- * Railway, Fly.io, etc). This is the ONLY entrypoint that gets the Docker
- * judge and the live Socket.IO leaderboard working, since both need a
- * long-lived process.
- *
- * For Vercel serverless, use api/index.js instead — see README.md.
+ * Standalone entrypoint — boots PostgreSQL (Neon) and MongoDB (if configured),
+ * creates HTTP server, attaches Socket.IO, and listens on env.port.
  */
 async function start() {
-  await connectDB();
-  console.log('Connected to MongoDB');
+  // 1. Initialize PostgreSQL (Users & Auth)
+  await initPostgres();
+
+  // 2. Connect to MongoDB (Problems/Quizzes/Submissions) if URI is provided
+  if (env.mongodbUri) {
+    try {
+      await connectDB();
+      console.log('Connected to MongoDB');
+    } catch (err) {
+      console.warn('MongoDB connection failed (non-critical if running in auth-only mode):', err.message);
+    }
+  } else {
+    console.log('MONGODB_URI not provided; running with Neon PostgreSQL primary database.');
+  }
 
   const httpServer = http.createServer(app);
   initSocket(httpServer);

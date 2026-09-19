@@ -24,7 +24,7 @@ import Logo from '@/components/common/Logo';
 import CollegeLogo from '@/components/common/CollegeLogo';
 import { NAV_BY_ROLE } from './navConfig';
 import { useAppDispatch, useAuth } from '@/app/hooks';
-import { logout } from '@/features/auth/authSlice';
+import { logoutUser } from '@/features/auth/authSlice';
 
 const DRAWER_WIDTH = 248;
 
@@ -41,7 +41,7 @@ const DashboardLayout = () => {
   const navItems = NAV_BY_ROLE[role] || [];
 
   const handleLogout = () => {
-    dispatch(logout());
+    dispatch(logoutUser());
     navigate('/login');
   };
 

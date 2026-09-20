@@ -8,7 +8,6 @@ import WorkspacePremiumRoundedIcon from '@mui/icons-material/WorkspacePremiumRou
 import BarChartRoundedIcon from '@mui/icons-material/BarChartRounded';
 import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded';
 import SchoolRoundedIcon from '@mui/icons-material/SchoolRounded';
-import AdminPanelSettingsRoundedIcon from '@mui/icons-material/AdminPanelSettingsRounded';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 
 export const NAV_BY_ROLE = {
@@ -34,9 +33,9 @@ export const NAV_BY_ROLE = {
   ],
   ADMIN: [
     { label: 'Dashboard', to: '/admin', icon: DashboardRoundedIcon },
-    { label: 'Users', to: '/admin/users', icon: GroupsRoundedIcon },
-    { label: 'Trainers', to: '/admin/trainers', icon: AdminPanelSettingsRoundedIcon },
+    { label: 'Students & Faculty', to: '/admin/users', icon: GroupsRoundedIcon },
     { label: 'Contests', to: '/admin/contests', icon: EmojiEventsRoundedIcon },
+    { label: 'Tests', to: '/admin/quizzes', icon: QuizRoundedIcon },
     { label: 'Code Bank', to: '/admin/questions', icon: CodeRoundedIcon },
     { label: 'Leaderboard', to: '/leaderboard', icon: LeaderboardRoundedIcon },
     { label: 'Analytics', to: '/admin/analytics', icon: BarChartRoundedIcon },

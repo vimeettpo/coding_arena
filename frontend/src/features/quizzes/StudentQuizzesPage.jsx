@@ -4,8 +4,10 @@ import QuizRoundedIcon from '@mui/icons-material/QuizRounded';
 import ScheduleRoundedIcon from '@mui/icons-material/ScheduleRounded';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
+import EmojiEventsRoundedIcon from '@mui/icons-material/EmojiEventsRounded';
 import { useNavigate } from 'react-router-dom';
 import quizService from '@/services/quizService';
+import QuizLeaderboardModal from '@/components/common/QuizLeaderboardModal';
 
 const STATUS_STYLE = {
   LIVE: { label: 'Live Now', color: '#15803D', bgcolor: '#DCFCE7', border: '1px solid #BBF7D0' },
@@ -17,6 +19,8 @@ const StudentQuizzesPage = () => {
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false);
+  const [selectedQuiz, setSelectedQuiz] = useState(null);
   const navigate = useNavigate();
 
   const SAMPLE_QUIZZES = [
@@ -125,55 +129,126 @@ const StudentQuizzesPage = () => {
                     />
                   </Stack>
 
-                  <Stack direction="row" spacing={2.5} sx={{ my: 2.5, color: '#64748B' }}>
+                  <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ gap: 0.75, my: 2 }}>
+                    {(q.questionCount > 0 || (!q.codingCount && qCount > 0)) && (
+                      <Chip
+                        size="small"
+                        label={`${q.questionCount ?? qCount} MCQs`}
+                        sx={{ bgcolor: '#EDE9FE', color: '#6D28D9', fontWeight: 600, fontSize: '0.75rem' }}
+                      />
+                    )}
+                    {q.codingCount > 0 && (
+                      <Chip
+                        size="small"
+                        label={`${q.codingCount} Coding Challenge${q.codingCount > 1 ? 's' : ''}`}
+                        sx={{ bgcolor: '#DCFCE7', color: '#15803D', fontWeight: 700, fontSize: '0.75rem' }}
+                      />
+                    )}
+                    <Chip
+                      size="small"
+                      label={
+                        q.allowedLanguages && q.allowedLanguages.length > 0
+                          ? q.allowedLanguages.join(', ')
+                          : 'All Languages'
+                      }
+                      variant="outlined"
+                      sx={{
+                        borderColor: q.allowedLanguages?.length > 0 ? '#F59E0B' : '#CBD5E1',
+                        color: q.allowedLanguages?.length > 0 ? '#B45309' : '#64748B',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                      }}
+                    />
+                    {q.targetBranch && q.targetBranch !== 'ALL' && (
+                      <Chip
+                        size="small"
+                        label={q.targetBranch}
+                        sx={{ bgcolor: '#F1F5F9', color: '#334155', fontWeight: 600, fontSize: '0.75rem' }}
+                      />
+                    )}
+                  </Stack>
+
+                  <Stack direction="row" spacing={2.5} sx={{ mb: 2, color: '#64748B' }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#1E293B' }}>
+                      {q.totalMarks} Total Marks
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#CBD5E1' }}>•</Typography>
                     <Stack direction="row" spacing={0.75} alignItems="center">
-                      <QuizRoundedIcon sx={{ fontSize: 18, color: '#94A3B8' }} />
-                      <Typography variant="body2" sx={{ fontWeight: 500, color: '#475569' }}>
-                        {qCount} Questions ({q.totalMarks} Marks)
-                      </Typography>
-                    </Stack>
-                    <Stack direction="row" spacing={0.75} alignItems="center">
-                      <ScheduleRoundedIcon sx={{ fontSize: 18, color: '#94A3B8' }} />
+                      <ScheduleRoundedIcon sx={{ fontSize: 16, color: '#94A3B8' }} />
                       <Typography variant="body2" sx={{ fontWeight: 500, color: '#475569' }}>
                         {q.durationMinutes} Mins
                       </Typography>
                     </Stack>
+                    {q.negativeMarking && (
+                      <>
+                        <Typography variant="body2" sx={{ color: '#CBD5E1' }}>•</Typography>
+                        <Typography variant="body2" sx={{ color: '#DC2626', fontWeight: 600, fontSize: '0.8rem' }}>
+                          Negative Marking Enabled
+                        </Typography>
+                      </>
+                    )}
                   </Stack>
 
-                  {q.attempted ? (
+                  <Stack spacing={1} sx={{ mt: 1 }}>
+                    {q.attempted ? (
+                      <Button
+                        fullWidth
+                        variant="outlined"
+                        color="success"
+                        startIcon={<CheckCircleRoundedIcon />}
+                        onClick={() => navigate(`/quizzes/${q.id}/attempt`)}
+                        sx={{
+                          fontWeight: 600,
+                          textTransform: 'none',
+                          py: 1,
+                          borderRadius: 2,
+                        }}
+                      >
+                        Completed (Score: {q.score !== null && q.score !== undefined ? q.score : (q.userScore || 0)} / {q.totalMarks})
+                      </Button>
+                    ) : (
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        color="primary"
+                        startIcon={<PlayArrowRoundedIcon />}
+                        onClick={() => navigate(`/quizzes/${q.id}/attempt`)}
+                        sx={{
+                          fontWeight: 700,
+                          textTransform: 'none',
+                          py: 1,
+                          borderRadius: 2,
+                          boxShadow: '0 2px 8px rgba(245, 158, 11, 0.25)',
+                        }}
+                      >
+                        Attempt Test Now
+                      </Button>
+                    )}
+
                     <Button
                       fullWidth
                       variant="outlined"
-                      color="success"
-                      startIcon={<CheckCircleRoundedIcon />}
-                      onClick={() => navigate(`/quizzes/${q.id}/attempt`)}
-                      sx={{
-                        fontWeight: 600,
-                        textTransform: 'none',
-                        py: 1,
-                        borderRadius: 2,
+                      startIcon={<EmojiEventsRoundedIcon sx={{ color: '#7C5CFF' }} />}
+                      onClick={() => {
+                        setSelectedQuiz(q);
+                        setLeaderboardOpen(true);
                       }}
-                    >
-                      Completed (Score: {q.score !== null && q.score !== undefined ? q.score : (q.userScore || 0)} / {q.totalMarks})
-                    </Button>
-                  ) : (
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      color="primary"
-                      startIcon={<PlayArrowRoundedIcon />}
-                      onClick={() => navigate(`/quizzes/${q.id}/attempt`)}
                       sx={{
                         fontWeight: 700,
                         textTransform: 'none',
-                        py: 1,
+                        py: 0.85,
                         borderRadius: 2,
-                        boxShadow: '0 2px 8px rgba(245, 158, 11, 0.25)',
+                        borderColor: '#E2E8F0',
+                        color: '#0F172A',
+                        '&:hover': {
+                          borderColor: '#7C5CFF',
+                          bgcolor: 'rgba(124, 92, 255, 0.05)',
+                        },
                       }}
                     >
-                      Attempt Test Now
+                      View Test Leaderboard
                     </Button>
-                  )}
+                  </Stack>
                 </Paper>
               </Grid>
             );
@@ -186,6 +261,14 @@ const StudentQuizzesPage = () => {
           </Typography>
         </Paper>
       )}
+
+      {/* Dedicated Quiz Leaderboard Modal */}
+      <QuizLeaderboardModal
+        open={leaderboardOpen}
+        quizId={selectedQuiz?.id}
+        quizTitle={selectedQuiz?.title}
+        onClose={() => setLeaderboardOpen(false)}
+      />
     </Box>
   );
 };

@@ -16,6 +16,11 @@ import StudentDashboard from '@/features/dashboard/student/StudentDashboard';
 import TrainerDashboard from '@/features/dashboard/trainer/TrainerDashboard';
 import TrainerStudentsPage from '@/features/dashboard/trainer/TrainerStudentsPage';
 import AdminDashboard from '@/features/dashboard/admin/AdminDashboard';
+import AdminUsersPage from '@/features/dashboard/admin/AdminUsersPage';
+import AdminContestsPage from '@/features/dashboard/admin/AdminContestsPage';
+import AdminQuizzesPage from '@/features/dashboard/admin/AdminQuizzesPage';
+import AdminQuestionsPage from '@/features/dashboard/admin/AdminQuestionsPage';
+import AdminAnalyticsPage from '@/features/dashboard/admin/AdminAnalyticsPage';
 import AdminSettingsPage from '@/features/dashboard/admin/AdminSettingsPage';
 
 import ProblemsListPage from '@/features/problems/ProblemsListPage';
@@ -89,11 +94,12 @@ function App() {
         <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
           <Route element={<DashboardLayout />}>
             <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/users" element={<ComingSoon title="Users" description="Manage every account on the platform." />} />
-            <Route path="/admin/trainers" element={<ComingSoon title="Trainers" description="Approve and manage trainer accounts." />} />
-            <Route path="/admin/contests" element={<ComingSoon title="Contests" description="Oversee all contests platform-wide." />} />
-            <Route path="/admin/questions" element={<ComingSoon title="Questions" description="Moderate the shared problem bank." />} />
-            <Route path="/admin/analytics" element={<ComingSoon title="System analytics" description="Platform-wide usage and engagement." />} />
+            <Route path="/admin/users" element={<AdminUsersPage />} />
+            <Route path="/admin/contests" element={<AdminContestsPage />} />
+            <Route path="/admin/quizzes" element={<AdminQuizzesPage />} />
+            <Route path="/admin/tests" element={<AdminQuizzesPage />} />
+            <Route path="/admin/questions" element={<AdminQuestionsPage />} />
+            <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
             <Route path="/admin/settings" element={<AdminSettingsPage />} />
           </Route>
         </Route>

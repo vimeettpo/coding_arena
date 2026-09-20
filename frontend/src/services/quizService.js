@@ -7,6 +7,7 @@ const quizService = {
   submit: (id, payload) => api.post(`/quizzes/${id}/submit`, payload).then((r) => r.data),
   getResult: (id) => api.get(`/quizzes/${id}/result`).then((r) => r.data),
   delete: (id) => api.delete(`/quizzes/${id}`).then((r) => r.data),
+  getLeaderboard: (id) => api.get(`/quizzes/${id}/leaderboard`).then((r) => r.data),
 };
 
 export default quizService;

@@ -21,6 +21,18 @@ const quizSchema = new mongoose.Schema(
     totalMarks: { type: Number, default: 0 },
     createdById: { type: String, required: true },
     questions: { type: [quizQuestionSchema], default: [] },
+    codingProblems: [
+      {
+        problemId: { type: mongoose.Schema.Types.ObjectId, ref: 'Problem', required: true },
+        points: { type: Number, default: 20 },
+      },
+    ],
+    allowedLanguages: { type: [String], default: [] }, // e.g. ['JAVA', 'PYTHON', 'CPP', 'C', 'JAVASCRIPT']. Empty = all allowed
+    targetBranch: { type: String, default: 'ALL' },
+    targetYear: { type: Number, default: null },
+    negativeMarking: { type: Boolean, default: false },
+    negativeMarks: { type: Number, default: 0 },
+    passingPercentage: { type: Number, default: 40 },
   },
   { timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' }, collection: 'quizzes' }
 );

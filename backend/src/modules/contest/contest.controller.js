@@ -27,4 +27,9 @@ async function create(req, res) {
   res.json(ApiResponse.message('Contest created.'));
 }
 
-module.exports = { dashboard, list, detail, register, create };
+async function leaderboard(req, res) {
+  const data = await contestService.getContestLeaderboard(req.params.id);
+  res.json(ApiResponse.ok(data));
+}
+
+module.exports = { dashboard, list, detail, register, create, leaderboard };

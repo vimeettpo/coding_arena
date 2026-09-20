@@ -9,6 +9,10 @@ const contestSchema = new mongoose.Schema(
     negativeMarking: { type: Boolean, default: false },
     createdById: { type: String, required: true },
     problemIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Problem' }],
+    allowedLanguages: { type: [String], default: [] },
+    targetBranch: { type: String, default: 'ALL' },
+    targetYear: { type: Number, default: null },
+    passingPercentage: { type: Number, default: 50 },
   },
   { timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' }, collection: 'contests' }
 );

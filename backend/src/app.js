@@ -14,6 +14,7 @@ const problemRoutes = require('./modules/problem/problem.routes');
 const contestRoutes = require('./modules/contest/contest.routes');
 const quizRoutes = require('./modules/quiz/quiz.routes');
 const leaderboardRoutes = require('./modules/leaderboard/leaderboard.routes');
+const adminRoutes = require('./modules/admin/admin.routes');
 
 const app = express();
 
@@ -54,6 +55,7 @@ app.use('/api/problems', problemRoutes); // SecurityConfig requires auth on all 
 app.use('/api/contests', contestRoutes);
 app.use('/api/quizzes', quizRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

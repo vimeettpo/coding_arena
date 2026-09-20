@@ -11,6 +11,7 @@ const {
   UnauthorizedActionException,
 } = require('../../common/errors');
 const env = require('../../config/env');
+const domainService = require('../admin/domain.service');
 
 const BCRYPT_ROUNDS = 12;
 
@@ -22,6 +23,16 @@ async function register(request) {
   const email = (request.email || '').toLowerCase().trim();
   if (!email) {
     throw new BadRequestException('Email is required.');
+  }
+
+  const emailDomain = email.includes('@') ? email.split('@')[1].toLowerCase().trim() : '';
+  if (!emailDomain) {
+    throw new BadRequestException('A valid email address is required.');
+  }
+
+  const isAllowed = await domainService.isDomainAllowed(emailDomain);
+  if (!isAllowed) {
+    throw new BadRequestException(`Registration with @${emailDomain} email is not accepted. Only approved domains are allowed.`);
   }
 
   if (await userService.existsByEmail(email)) {

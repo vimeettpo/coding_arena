@@ -75,6 +75,18 @@ async function initPostgres() {
 
       CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token ON refresh_tokens(token);
       CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON refresh_tokens(user_id);
+
+      CREATE TABLE IF NOT EXISTS allowed_email_domains (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        domain VARCHAR(255) UNIQUE NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_allowed_email_domains_lower ON allowed_email_domains(LOWER(domain));
+
+      INSERT INTO allowed_email_domains (domain)
+      VALUES ('gmail.com'), ('googlemail.com')
+      ON CONFLICT (domain) DO NOTHING;
     `);
 
     console.log('Neon PostgreSQL connected and schema verified successfully.');

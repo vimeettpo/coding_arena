@@ -16,6 +16,7 @@ import StudentDashboard from '@/features/dashboard/student/StudentDashboard';
 import TrainerDashboard from '@/features/dashboard/trainer/TrainerDashboard';
 import TrainerStudentsPage from '@/features/dashboard/trainer/TrainerStudentsPage';
 import AdminDashboard from '@/features/dashboard/admin/AdminDashboard';
+import AdminSettingsPage from '@/features/dashboard/admin/AdminSettingsPage';
 
 import ProblemsListPage from '@/features/problems/ProblemsListPage';
 import ProblemWorkspacePage from '@/features/problems/ProblemWorkspacePage';
@@ -93,7 +94,7 @@ function App() {
             <Route path="/admin/contests" element={<ComingSoon title="Contests" description="Oversee all contests platform-wide." />} />
             <Route path="/admin/questions" element={<ComingSoon title="Questions" description="Moderate the shared problem bank." />} />
             <Route path="/admin/analytics" element={<ComingSoon title="System analytics" description="Platform-wide usage and engagement." />} />
-            <Route path="/admin/settings" element={<ComingSoon title="Settings" description="Configure platform-wide preferences." />} />
+            <Route path="/admin/settings" element={<AdminSettingsPage />} />
           </Route>
         </Route>
 

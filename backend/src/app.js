@@ -22,8 +22,13 @@ app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(
   cors({
     origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
       if (!origin) return callback(null, true);
-      return callback(null, origin);
+      const allowedOrigins = env.cors.allowedOrigins.map((o) => o.trim().toLowerCase());
+      if (allowedOrigins.includes('*') || allowedOrigins.includes(origin.toLowerCase())) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS policy violation: Origin "${origin}" is not allowed.`));
     },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,

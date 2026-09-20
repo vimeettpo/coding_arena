@@ -35,4 +35,13 @@ const env = {
   adminSecretCode: process.env.ADMIN_SECRET_CODE || 'codearena-admin-2026',
 };
 
+if (env.nodeEnv === 'production') {
+  if (!process.env.ADMIN_SECRET_CODE || env.adminSecretCode === 'codearena-admin-2026') {
+    console.warn('[SECURITY WARNING] ADMIN_SECRET_CODE is using default dev secret! Please set a strong private ADMIN_SECRET_CODE in .env.');
+  }
+  if (!process.env.JWT_SECRET || env.jwt.secret.includes('change-this-dev-secret')) {
+    console.warn('[SECURITY WARNING] JWT_SECRET is using default dev secret! Please set a strong JWT_SECRET in .env.');
+  }
+}
+
 module.exports = env;

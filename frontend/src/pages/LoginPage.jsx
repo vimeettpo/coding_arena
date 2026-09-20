@@ -75,7 +75,7 @@ const LoginPage = () => {
 
     if (login.fulfilled.match(result)) {
       const userRole = result.payload?.role || 'STUDENT';
-      const fallbackDest = userRole === 'ADMIN' ? '/admin' : userRole === 'TRAINER' ? '/trainer' : '/student';
+      const fallbackDest = userRole === 'ADMIN' ? '/admin' : '/student';
       const dest = location.state?.from?.pathname || fallbackDest;
       navigate(dest, { replace: true });
     }
@@ -158,7 +158,6 @@ const LoginPage = () => {
                 }}
               >
                 <ToggleButton value="STUDENT">Student</ToggleButton>
-                <ToggleButton value="TRAINER">Trainer</ToggleButton>
                 <ToggleButton value="ADMIN">Admin</ToggleButton>
               </ToggleButtonGroup>
             </Box>

@@ -55,7 +55,7 @@ async function testHttpRoutes() {
   const port = server.address().port;
   console.log(`Test Express server running on port ${port}`);
 
-  const testEmail = 'api_test_student@codearena.local';
+  const testEmail = 'api_test_student@gmail.com';
   await query('DELETE FROM users WHERE LOWER(email) = $1', [testEmail]);
 
   try {

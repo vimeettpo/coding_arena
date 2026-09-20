@@ -25,7 +25,7 @@ const RegisterPage = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { status, error } = useAuth();
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'STUDENT', collegeId: '', branch: '', year: '', teachingDomain: '', adminSecretCode: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'STUDENT', collegeId: '', branch: '', year: '', adminSecretCode: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState('');
 
@@ -49,11 +49,6 @@ const RegisterPage = () => {
       return;
     }
 
-    if (form.role === 'TRAINER' && !form.teachingDomain.trim()) {
-      setLocalError('Please select your Teaching Domain.');
-      return;
-    }
-
     if (form.role === 'ADMIN' && !form.adminSecretCode.trim()) {
       setLocalError('Please enter the Admin Secret Code.');
       return;
@@ -74,9 +69,6 @@ const RegisterPage = () => {
           collegeId: form.collegeId.trim(),
           branch: form.branch.trim(),
           year: form.year,
-        }),
-        ...(form.role === 'TRAINER' && {
-          teachingDomain: form.teachingDomain.trim(),
         }),
         ...(form.role === 'ADMIN' && {
           adminSecretCode: form.adminSecretCode.trim(),
@@ -104,7 +96,7 @@ const RegisterPage = () => {
       >
         <Typography variant="h4" sx={{ fontSize: '1.5rem', mb: 0.5, color: '#0F172A', fontWeight: 800 }}>Create your account</Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
-          Join as a student to compete, a trainer to run contests, or an admin to manage the platform.
+          Join as a student to compete or an admin to manage the platform.
         </Typography>
 
         {(error || localError) && (
@@ -144,7 +136,6 @@ const RegisterPage = () => {
               }}
             >
               <ToggleButton value="STUDENT">I'm a Student</ToggleButton>
-              <ToggleButton value="TRAINER">I'm a Trainer</ToggleButton>
               <ToggleButton value="ADMIN">I'm an Admin</ToggleButton>
             </ToggleButtonGroup>
 
@@ -221,22 +212,6 @@ const RegisterPage = () => {
                   ))}
                 </TextField>
               </>
-            )}
-
-            {/* Trainer-only fields */}
-            {form.role === 'TRAINER' && (
-              <TextField
-                label="Teaching Domain"
-                required
-                fullWidth
-                select
-                value={form.teachingDomain}
-                onChange={handleChange('teachingDomain')}
-              >
-                {['Python', 'MERN Stack', 'Java Development', 'Robotics', 'Web Development'].map((d) => (
-                  <MenuItem key={d} value={d}>{d}</MenuItem>
-                ))}
-              </TextField>
             )}
 
             {/* Admin-only fields */}

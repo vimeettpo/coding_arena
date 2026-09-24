@@ -19,7 +19,7 @@ React 19 + Vite scaffold for the CodeArena coding assessment platform. This is t
 
 ```bash
 npm install
-cp .env.example .env      # point VITE_API_BASE_URL at your backend
+cp .env.example .env      # point VITE_API_BASE_URL at your backend (http://localhost:8080/api)
 npm run dev                # http://localhost:5173
 ```
 
@@ -28,7 +28,12 @@ npm run build              # production build to dist/
 npm run lint                # oxlint
 ```
 
-The dev server proxies `/api` and `/ws` to `http://localhost:8080` (see `vite.config.js`), so once the Spring Boot backend is running locally, API calls from this app work without CORS configuration.
+## 🔐 Demo Credentials
+
+| Role | Route | Email / Username | Password |
+|---|---|---|---|
+| **Admin** | `/admin` | `admin@gmail.com` *(or `admin`)* | `Admin@123` |
+| **Student** | `/student` | `student@gmail.com` *(or `student`)* | `Student@123` |
 
 ## Folder structure
 

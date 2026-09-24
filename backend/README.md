@@ -66,14 +66,24 @@ api/index.js               Vercel serverless entrypoint
 vercel.json                Vercel routing config
 ```
 
+## 🔐 Sample Credentials & Demo Access
+
+| Role | Email / Username | Password | Notes |
+|---|---|---|---|
+| **Admin** | `admin@gmail.com` *(or `admin`)* | `Admin@123` | Full access to Admin APIs and dashboard |
+| **Student** | `student@gmail.com` *(or `student`)* | `Student@123` | Access to student coding workspace & quizzes |
+
+- **Admin Secret Code**: `codearena-admin-2026` (used on `/api/auth/register` to register new admins).
+- **Run Seed Script**: `npm run seed:users` (creates/resets these demo users in PostgreSQL).
+
 ## Local setup
 
 ```bash
 cp .env.example .env
-# fill in MONGODB_URI at minimum
 
 npm install
-npm run dev          # nodemon, standalone server on :8080
+npm run seed:users     # seed demo admin and student accounts
+npm run dev            # nodemon, standalone server on :8080
 ```
 
 To use the real judge locally, build the sandbox images once:

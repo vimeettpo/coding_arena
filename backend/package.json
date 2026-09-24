@@ -9,6 +9,7 @@
     "start": "node src/server.js",
     "test:auth": "node test_auth_flow.js",
     "test:api": "node test_api_routes.js",
+    "seed:users": "node src/database/seed_demo_users.js",
     "build-judge-images": "sh src/docker/build-judge-images.sh"
   },
   "dependencies": {

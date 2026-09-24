@@ -101,12 +101,38 @@ CodeArena/
 
 ---
 
+## 🔐 Sample Credentials & Demo Access
+
+Use the following pre-configured credentials to log into the platform immediately:
+
+| Role | Portal / Route | Email / Username | Password | Access & Permissions |
+|---|---|---|---|---|
+| **Admin** | [`/admin`](http://localhost:5173/login) | `admin@gmail.com`<br>*(or `admin`)* | `Admin@123` | Full Admin Dashboard: Question management, problem creation, testcase drawers, contest creation, quizzes, bulk CSV student import, system & branch analytics. |
+| **Student** | [`/student`](http://localhost:5173/login) | `student@gmail.com`<br>*(or `student`)* | `Student@123` | Full Student Dashboard: Monaco code editor workspace, code execution judge, contest registration & participation, timed quizzes, live standings. |
+
+### 🔑 Admin Registration Passphrase
+To register a new **Admin** account through the UI at [`/register`](http://localhost:5173/register), select the **ADMIN** role and enter the Admin Secret Code:
+```
+codearena-admin-2026
+```
+*(Configured via `ADMIN_SECRET_CODE` in `backend/.env`)*
+
+### ⚡ Automatic Database Seeding
+The backend automatically initializes database tables and seeds these demo accounts upon startup. You can also re-seed or verify these demo credentials at any time:
+```bash
+cd backend
+npm run seed:users
+```
+
+---
+
 ## 🚀 Quick Start & Installation
 
 ### Prerequisites
 - **Node.js**: `>= 18.x`
+- **PostgreSQL**: Neon PostgreSQL or local PostgreSQL (`>= 14`)
 - **MongoDB**: Local MongoDB instance or [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) cluster URI
-- **Docker** *(Optional for local code execution)*: Required if you want to run sandboxed code judge execution locally
+- **Docker** *(Optional for local code execution)*: Required only if running sandboxed Docker judge locally
 
 ---
 
@@ -123,23 +149,43 @@ npm install
 cp .env.example .env
 ```
 
-Configure your `.env` variables:
+Review and adjust your `backend/.env` (see [`backend/.env.example`](backend/.env.example)):
 ```env
+# ---- Server ----
+NODE_ENV=development
 PORT=8080
-MONGODB_URI=mongodb://localhost:27017/codearena
-JWT_SECRET=your_super_secret_jwt_key
-JWT_REFRESH_SECRET=your_super_secret_refresh_key
+
+# ---- Database ----
+DATABASE_URL=postgresql://user:password@host/database?sslmode=require
+MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/codearena
+
+# ---- JWT ----
+JWT_SECRET=codearena-super-secure-jwt-dev-secret-key-2026
+JWT_ACCESS_EXPIRY_MS=3600000
+JWT_REFRESH_EXPIRY_MS=604800000
+
+# ---- Admin Security ----
+ADMIN_SECRET_CODE=codearena-admin-2026
+
+# ---- CORS ----
 CORS_ALLOWED_ORIGINS=http://localhost:5173
-JUDGE_DISABLED=false
+
+# ---- Judge (Docker sandbox) ----
+JUDGE_DISABLED=true
 ```
 
-Start the standalone dev server:
+Seed demo users (Admin & Student):
+```bash
+npm run seed:users
+```
+
+Start the standalone backend server:
 ```bash
 # Start backend server with live reload (nodemon)
 npm run dev
 ```
 
-*(Optional)* Build Docker judge images for code execution:
+*(Optional)* Build Docker judge images if testing code execution with Docker:
 ```bash
 # Build sandbox runner Docker images for C, C++, Java, Python, and JavaScript
 npm run build-judge-images
@@ -160,9 +206,9 @@ npm install
 cp .env.example .env
 ```
 
-Configure your `.env` variables:
+Your `frontend/.env` (see [`frontend/.env.example`](frontend/.env.example)):
 ```env
-VITE_API_BASE_URL=http://localhost:8080
+VITE_API_BASE_URL=http://localhost:8080/api
 ```
 
 Start the frontend development server:
@@ -171,7 +217,7 @@ Start the frontend development server:
 npm run dev
 ```
 
-Open `http://localhost:5173` in your browser.
+Open [http://localhost:5173](http://localhost:5173) in your browser and sign in using the sample credentials above!
 
 ---
 

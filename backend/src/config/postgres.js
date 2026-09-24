@@ -85,9 +85,34 @@ async function initPostgres() {
       CREATE INDEX IF NOT EXISTS idx_allowed_email_domains_lower ON allowed_email_domains(LOWER(domain));
 
       INSERT INTO allowed_email_domains (domain)
-      VALUES ('gmail.com'), ('googlemail.com')
+      VALUES ('gmail.com'), ('googlemail.com'), ('codearena.com'), ('vimeet.ac.in')
       ON CONFLICT (domain) DO NOTHING;
     `);
+
+    // Seed default admin and demo student if they do not exist
+    const adminCheck = await client.query("SELECT id FROM users WHERE LOWER(email) = 'admin@gmail.com'");
+    if (adminCheck.rows.length === 0) {
+      const bcrypt = require('bcryptjs');
+      const adminHash = await bcrypt.hash('Admin@123', 12);
+      await client.query(
+        `INSERT INTO users (name, username, email, password_hash, role, email_verified, enabled, approved, created_at, updated_at)
+         VALUES ('System Administrator', 'admin', 'admin@gmail.com', $1, 'ADMIN', TRUE, TRUE, TRUE, NOW(), NOW())
+         ON CONFLICT (email) DO NOTHING`,
+        [adminHash]
+      );
+    }
+
+    const studentCheck = await client.query("SELECT id FROM users WHERE LOWER(email) = 'student@gmail.com'");
+    if (studentCheck.rows.length === 0) {
+      const bcrypt = require('bcryptjs');
+      const studentHash = await bcrypt.hash('Student@123', 12);
+      await client.query(
+        `INSERT INTO users (name, username, email, password_hash, role, college, branch, year, email_verified, enabled, approved, created_at, updated_at)
+         VALUES ('Demo Student', 'student', 'student@gmail.com', $1, 'STUDENT', 'Vishwaniketan iMEET', 'Computer Engineering', 3, TRUE, TRUE, TRUE, NOW(), NOW())
+         ON CONFLICT (email) DO NOTHING`,
+        [studentHash]
+      );
+    }
 
     console.log('Neon PostgreSQL connected and schema verified successfully.');
   } finally {

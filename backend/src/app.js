@@ -24,6 +24,14 @@ app.use(
     origin: (origin, callback) => {
       // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
       if (!origin) return callback(null, true);
+      
+      // In development, automatically allow all localhost and 127.0.0.1 origins (any port)
+      if (env.nodeEnv !== 'production') {
+        if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+          return callback(null, true);
+        }
+      }
+
       const allowedOrigins = env.cors.allowedOrigins.map((o) => o.trim().toLowerCase());
       if (allowedOrigins.includes('*') || allowedOrigins.includes(origin.toLowerCase())) {
         return callback(null, true);

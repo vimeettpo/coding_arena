@@ -5,8 +5,13 @@ let pool = null;
 
 function getPool() {
   if (!pool) {
-    if (!env.databaseUrl) {
-      throw new Error('DATABASE_URL is not set. Please add your Neon PostgreSQL connection string to .env');
+    if (!env.databaseUrl || env.databaseUrl.includes('user:password@host')) {
+      throw new Error(
+        '\n======================================================\n' +
+        '❌ [DATABASE_URL ERROR]: DATABASE_URL is missing or using placeholder in backend/.env!\n' +
+        'Please configure a valid PostgreSQL connection string (e.g. from Neon.tech or local PostgreSQL) in backend/.env.\n' +
+        '======================================================\n'
+      );
     }
 
     pool = new Pool({

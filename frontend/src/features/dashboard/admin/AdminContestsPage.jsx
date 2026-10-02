@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -28,6 +29,7 @@ import EmojiEventsRoundedIcon from '@mui/icons-material/EmojiEventsRounded';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded';
 
 import adminService from '@/services/adminService';
@@ -109,6 +111,29 @@ const AdminContestsPage = () => {
 
   return (
     <Box sx={{ pb: 4 }}>
+      {/* Breadcrumbs / Back Navigation */}
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+        <Button
+          component={Link}
+          to="/admin"
+          startIcon={<ArrowBackRoundedIcon />}
+          size="small"
+          sx={{
+            color: '#64748B',
+            textTransform: 'none',
+            fontWeight: 600,
+            p: 0,
+            '&:hover': { color: '#D97706', bgcolor: 'transparent' },
+          }}
+        >
+          Dashboard
+        </Button>
+        <Typography variant="body2" sx={{ color: '#CBD5E1' }}>/</Typography>
+        <Typography variant="body2" sx={{ color: '#0F172A', fontWeight: 600 }}>
+          Contests
+        </Typography>
+      </Stack>
+
       {/* Header */}
       <Stack
         direction={{ xs: 'column', sm: 'row' }}

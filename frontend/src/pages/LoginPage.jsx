@@ -22,6 +22,7 @@ import GoogleIcon from '@mui/icons-material/Google';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import Visibility from '@mui/icons-material/VisibilityRounded';
 import VisibilityOff from '@mui/icons-material/VisibilityOffRounded';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { useAppDispatch, useAuth } from '@/app/hooks';
 import { login, clearAuthError } from '@/features/auth/authSlice';
 
@@ -86,7 +87,15 @@ const LoginPage = () => {
   };
 
   return (
-    <Container maxWidth="xs" sx={{ py: { xs: 8, md: 12 } }}>
+    <Container maxWidth="xs" sx={{ py: { xs: 6, md: 10 } }}>
+      <Button
+        component={RouterLink}
+        to="/"
+        startIcon={<ArrowBackRoundedIcon />}
+        sx={{ mb: 2, color: '#64748B', fontWeight: 600, textTransform: 'none', px: 0, '&:hover': { bgcolor: 'transparent', color: '#0F172A' } }}
+      >
+        Back to home
+      </Button>
       <Paper
         elevation={0}
         sx={{
@@ -195,13 +204,25 @@ const LoginPage = () => {
             />
             <Stack direction="row" alignItems="center" justifyContent="space-between">
               <FormControlLabel
-                control={<Checkbox size="small" checked={form.rememberMe} onChange={handleChange('rememberMe')} sx={{ color: 'text.secondary' }} />}
-                label={<Typography variant="body2" sx={{ color: 'text.primary' }}>Remember me</Typography>}
+                control={
+                  <Checkbox
+                    size="small"
+                    checked={showPassword}
+                    onChange={(e) => setShowPassword(e.target.checked)}
+                    sx={{ color: 'text.secondary', '&.Mui-checked': { color: '#D97706' } }}
+                  />
+                }
+                label={<Typography variant="body2" sx={{ color: 'text.primary' }}>Show password</Typography>}
               />
               <Link component={RouterLink} to="/forgot-password" variant="body2" sx={{ color: '#D97706', fontWeight: 600 }}>
                 Forgot password?
               </Link>
             </Stack>
+            <FormControlLabel
+              control={<Checkbox size="small" checked={form.rememberMe} onChange={handleChange('rememberMe')} sx={{ color: 'text.secondary', '&.Mui-checked': { color: '#D97706' } }} />}
+              label={<Typography variant="body2" sx={{ color: 'text.primary' }}>Remember me</Typography>}
+              sx={{ mt: -1 }}
+            />
             <Button
               type="submit"
               variant="contained"

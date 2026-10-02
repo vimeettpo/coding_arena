@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import {
   Box,
@@ -11,6 +12,7 @@ import {
   Chip,
 } from '@mui/material';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
 import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
 import DeleteSweepRoundedIcon from '@mui/icons-material/DeleteSweepRounded';
@@ -245,6 +247,23 @@ const OnlineCompilerPage = () => {
             sx={{ px: 2, py: 1.2, borderBottom: '1px solid #E2E8F0', bgcolor: '#FAFAFA' }}
           >
             <Stack direction="row" alignItems="center" spacing={1.5}>
+              <Tooltip title="Back to Problem Practice">
+                <IconButton
+                  component={Link}
+                  to="/problems/practice"
+                  size="small"
+                  sx={{
+                    bgcolor: '#FFFFFF',
+                    border: '1px solid #E2E8F0',
+                    color: '#334155',
+                    '&:hover': { bgcolor: '#F1F5F9', color: '#D97706' },
+                    borderRadius: 1.5,
+                    p: 0.5,
+                  }}
+                >
+                  <ArrowBackRoundedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
               <Chip
                 label={selectedLang.filename}
                 size="small"

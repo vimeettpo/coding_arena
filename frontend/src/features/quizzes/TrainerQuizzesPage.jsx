@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -25,6 +26,7 @@ import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import QuizRoundedIcon from '@mui/icons-material/QuizRounded';
 import ScheduleRoundedIcon from '@mui/icons-material/ScheduleRounded';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import quizService from '@/services/quizService';
 
 const STATUS_STYLE = {
@@ -155,6 +157,29 @@ const TrainerQuizzesPage = () => {
 
   return (
     <Box>
+      {/* Breadcrumbs / Back Navigation */}
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+        <Button
+          component={Link}
+          to="/trainer"
+          startIcon={<ArrowBackRoundedIcon />}
+          size="small"
+          sx={{
+            color: '#64748B',
+            textTransform: 'none',
+            fontWeight: 600,
+            p: 0,
+            '&:hover': { color: '#D97706', bgcolor: 'transparent' },
+          }}
+        >
+          Dashboard
+        </Button>
+        <Typography variant="body2" sx={{ color: '#CBD5E1' }}>/</Typography>
+        <Typography variant="body2" sx={{ color: '#0F172A', fontWeight: 600 }}>
+          Tests & Assessments
+        </Typography>
+      </Stack>
+
       <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} gap={2} sx={{ mb: 3.5 }}>
         <Box>
           <Typography variant="h4" sx={{ fontWeight: 700, color: '#0F172A', mb: 0.5 }}>

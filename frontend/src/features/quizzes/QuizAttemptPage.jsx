@@ -24,6 +24,8 @@ import {
   TextField,
   CircularProgress,
   Grid,
+  Tooltip,
+  IconButton,
 } from '@mui/material';
 import TimerRoundedIcon from '@mui/icons-material/TimerRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
@@ -77,6 +79,7 @@ const QuizAttemptPage = () => {
   const [timeLeft, setTimeLeft] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -512,23 +515,41 @@ const QuizAttemptPage = () => {
         }}
       >
         <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems="center" spacing={2}>
-          <Box>
-            <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A', fontSize: '1.1rem' }}>
-              {quiz.title}
-            </Typography>
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.25 }}>
-              <Typography variant="caption" sx={{ color: '#64748B' }}>
-                Total: {quiz.totalMarks} Marks
+          <Stack direction="row" alignItems="center" spacing={1.5}>
+            <Tooltip title="Exit Test">
+              <IconButton
+                onClick={() => setShowExitConfirm(true)}
+                size="small"
+                sx={{
+                  bgcolor: '#F8FAFC',
+                  border: '1px solid #E2E8F0',
+                  color: '#475569',
+                  '&:hover': { bgcolor: '#F1F5F9', color: '#DC2626' },
+                  borderRadius: 2,
+                  p: 0.75,
+                }}
+              >
+                <ArrowBackRoundedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A', fontSize: '1.1rem' }}>
+                {quiz.title}
               </Typography>
-              {quiz.negativeMarking && (
-                <Chip
-                  size="small"
-                  label={`-${quiz.negativeMarks || 1} Penalty per wrong MCQ`}
-                  sx={{ height: 18, fontSize: '0.65rem', bgcolor: '#FEE2E2', color: '#B91C1C', fontWeight: 700 }}
-                />
-              )}
-            </Stack>
-          </Box>
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.25 }}>
+                <Typography variant="caption" sx={{ color: '#64748B' }}>
+                  Total: {quiz.totalMarks} Marks
+                </Typography>
+                {quiz.negativeMarking && (
+                  <Chip
+                    size="small"
+                    label={`-${quiz.negativeMarks || 1} Penalty per wrong MCQ`}
+                    sx={{ height: 18, fontSize: '0.65rem', bgcolor: '#FEE2E2', color: '#B91C1C', fontWeight: 700 }}
+                  />
+                )}
+              </Stack>
+            </Box>
+          </Stack>
 
           <Stack direction="row" spacing={2} alignItems="center">
             {/* Timer pill */}
@@ -1026,6 +1047,29 @@ const QuizAttemptPage = () => {
             }}
           >
             {submitting ? 'Submitting...' : 'Yes, Submit Test'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Exit Test Confirmation Modal */}
+      <Dialog open={showExitConfirm} onClose={() => setShowExitConfirm(false)}>
+        <DialogTitle sx={{ fontWeight: 800 }}>Exit Assessment?</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ color: '#334155' }}>
+            Are you sure you want to leave this test session? If you leave, your answers will not be automatically submitted and the countdown timer will continue running until the deadline.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setShowExitConfirm(false)} sx={{ color: 'text.secondary', textTransform: 'none' }}>
+            Stay in Test
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => navigate('/quizzes')}
+            sx={{ fontWeight: 700, textTransform: 'none' }}
+          >
+            Leave Test
           </Button>
         </DialogActions>
       </Dialog>

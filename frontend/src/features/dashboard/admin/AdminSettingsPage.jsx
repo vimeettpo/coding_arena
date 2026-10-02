@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Box,
   Paper,
@@ -19,6 +20,7 @@ import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import SecurityRoundedIcon from '@mui/icons-material/SecurityRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import adminService from '@/services/adminService';
 
 const DEFAULT_GOOGLE_DOMAINS = ['gmail.com', 'googlemail.com'];
@@ -86,6 +88,29 @@ const AdminSettingsPage = () => {
 
   return (
     <Box sx={{ maxWidth: 1100, mx: 'auto', pb: 5 }}>
+      {/* Breadcrumbs / Back Navigation */}
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+        <Button
+          component={Link}
+          to="/admin"
+          startIcon={<ArrowBackRoundedIcon />}
+          size="small"
+          sx={{
+            color: '#64748B',
+            textTransform: 'none',
+            fontWeight: 600,
+            p: 0,
+            '&:hover': { color: '#D97706', bgcolor: 'transparent' },
+          }}
+        >
+          Dashboard
+        </Button>
+        <Typography variant="body2" sx={{ color: '#CBD5E1' }}>/</Typography>
+        <Typography variant="body2" sx={{ color: '#0F172A', fontWeight: 600 }}>
+          Settings
+        </Typography>
+      </Stack>
+
       {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" sx={{ fontSize: '1.65rem', fontWeight: 800, color: '#0F172A', mb: 0.5 }}>

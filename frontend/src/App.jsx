@@ -50,7 +50,7 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/forgot-password" element={<ComingSoon title="Forgot password" description="Password reset via OTP verification." />} />
+          <Route path="/forgot-password" element={<ComingSoon title="Forgot password" description="Password reset via OTP verification." backTo="/login" backLabel="Back to Sign In" />} />
         </Route>
 
         {/* Shared Authenticated Routes (Student, Trainer, Admin) */}
@@ -69,10 +69,10 @@ function App() {
             <Route path="/compiler" element={<OnlineCompilerPage />} />
             <Route path="/problems/practice" element={<ProblemsListPage />} />
             <Route path="/problems/:slug" element={<ProblemWorkspacePage />} />
-            <Route path="/assignments" element={<ComingSoon title="Assignments" description="Deadlines, submissions and feedback in one place." />} />
+            <Route path="/assignments" element={<ComingSoon title="Assignments" description="Deadlines, submissions and feedback in one place." backTo="/student" backLabel="Back to Dashboard" />} />
             <Route path="/quizzes" element={<StudentQuizzesPage />} />
             <Route path="/quizzes/:id/attempt" element={<QuizAttemptPage />} />
-            <Route path="/certificates" element={<ComingSoon title="Certificates" description="Download your QR-verified certificates." />} />
+            <Route path="/certificates" element={<ComingSoon title="Certificates" description="Download your QR-verified certificates." backTo="/student" backLabel="Back to Dashboard" />} />
           </Route>
         </Route>
 
@@ -81,12 +81,12 @@ function App() {
           <Route element={<DashboardLayout />}>
             <Route path="/trainer" element={<TrainerDashboard />} />
             <Route path="/trainer/quizzes" element={<TrainerQuizzesPage />} />
-            <Route path="/trainer/workshops" element={<ComingSoon title="Workshops" description="Create and manage workshops, attendance and certificates." />} />
-            <Route path="/trainer/contests" element={<ComingSoon title="Contests" description="Build contests with coding problems, MCQs and negative marking." />} />
-            <Route path="/trainer/assignments" element={<ComingSoon title="Assignments" description="Create assignments and track submissions." />} />
-            <Route path="/trainer/questions" element={<ComingSoon title="Question bank" description="Upload problems, test cases and editorials." />} />
+            <Route path="/trainer/workshops" element={<ComingSoon title="Workshops" description="Create and manage workshops, attendance and certificates." backTo="/trainer" backLabel="Back to Dashboard" />} />
+            <Route path="/trainer/contests" element={<ComingSoon title="Contests" description="Build contests with coding problems, MCQs and negative marking." backTo="/trainer" backLabel="Back to Dashboard" />} />
+            <Route path="/trainer/assignments" element={<ComingSoon title="Assignments" description="Create assignments and track submissions." backTo="/trainer" backLabel="Back to Dashboard" />} />
+            <Route path="/trainer/questions" element={<ComingSoon title="Question bank" description="Upload problems, test cases and editorials." backTo="/trainer" backLabel="Back to Dashboard" />} />
             <Route path="/trainer/students" element={<TrainerStudentsPage />} />
-            <Route path="/trainer/analytics" element={<ComingSoon title="Analytics" description="Submission trends, difficulty analysis and pass rates." />} />
+            <Route path="/trainer/analytics" element={<ComingSoon title="Analytics" description="Submission trends, difficulty analysis and pass rates." backTo="/trainer" backLabel="Back to Dashboard" />} />
           </Route>
         </Route>
 

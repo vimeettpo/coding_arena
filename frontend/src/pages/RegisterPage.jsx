@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import Visibility from '@mui/icons-material/VisibilityRounded';
 import VisibilityOff from '@mui/icons-material/VisibilityOffRounded';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { useAppDispatch, useAuth } from '@/app/hooks';
 import { register, clearAuthError } from '@/features/auth/authSlice';
 
@@ -82,7 +83,15 @@ const RegisterPage = () => {
   };
 
   return (
-    <Container maxWidth="xs" sx={{ py: { xs: 8, md: 12 } }}>
+    <Container maxWidth="xs" sx={{ py: { xs: 6, md: 10 } }}>
+      <Button
+        component={RouterLink}
+        to="/"
+        startIcon={<ArrowBackRoundedIcon />}
+        sx={{ mb: 2, color: '#64748B', fontWeight: 600, textTransform: 'none', px: 0, '&:hover': { bgcolor: 'transparent', color: '#0F172A' } }}
+      >
+        Back to home
+      </Button>
       <Paper
         elevation={0}
         sx={{

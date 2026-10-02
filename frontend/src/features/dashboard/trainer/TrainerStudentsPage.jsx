@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -18,6 +19,8 @@ import {
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import HourglassEmptyRoundedIcon from '@mui/icons-material/HourglassEmptyRounded';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import { Button } from '@mui/material';
 import dashboardService from '@/services/dashboardService';
 
 const TrainerStudentsPage = () => {
@@ -46,6 +49,29 @@ const TrainerStudentsPage = () => {
 
   return (
     <Box>
+      {/* Breadcrumbs / Back Navigation */}
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+        <Button
+          component={Link}
+          to="/trainer"
+          startIcon={<ArrowBackRoundedIcon />}
+          size="small"
+          sx={{
+            color: '#64748B',
+            textTransform: 'none',
+            fontWeight: 600,
+            p: 0,
+            '&:hover': { color: '#D97706', bgcolor: 'transparent' },
+          }}
+        >
+          Dashboard
+        </Button>
+        <Typography variant="body2" sx={{ color: '#CBD5E1' }}>/</Typography>
+        <Typography variant="body2" sx={{ color: '#0F172A', fontWeight: 600 }}>
+          Students
+        </Typography>
+      </Stack>
+
       <Typography variant="h4" sx={{ fontSize: '1.6rem', mb: 0.5, color: '#0F172A', fontWeight: 800 }}>
         Students
       </Typography>

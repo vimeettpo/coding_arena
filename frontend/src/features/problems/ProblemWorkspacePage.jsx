@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import {
   Box,
@@ -18,6 +18,7 @@ import {
   Divider,
 } from '@mui/material';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
 import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
 import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
@@ -166,32 +167,52 @@ const ProblemWorkspacePage = () => {
         gap={2}
         sx={{ mb: 2 }}
       >
-        <Box>
-          <Stack direction="row" alignItems="center" spacing={1.5}>
-            <Typography variant="h5" sx={{ fontWeight: 700, color: '#0F172A', fontSize: '1.3rem' }}>
-              {problem.title || 'Coding Problem'}
-            </Typography>
-            <Chip
-              label={diffLabel}
+        <Stack direction="row" alignItems="center" spacing={1.5}>
+          <Tooltip title="Back to Problem List">
+            <IconButton
+              component={Link}
+              to="/problems/practice"
               size="small"
               sx={{
-                fontWeight: 700,
-                fontSize: '0.75rem',
-                height: 24,
-                ...diffStyle,
+                bgcolor: '#FFFFFF',
+                border: '1px solid #E2E8F0',
+                color: '#334155',
+                '&:hover': { bgcolor: '#F1F5F9', color: '#D97706' },
+                borderRadius: 2,
+                p: 0.75,
               }}
-            />
-          </Stack>
-          <Stack direction="row" spacing={1} sx={{ mt: 0.5, alignItems: 'center' }}>
-            <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 500 }}>
-              Time Limit: {problem.timeLimitMs || 1000} ms
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#CBD5E1' }}>•</Typography>
-            <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 500 }}>
-              Memory Limit: {problem.memoryLimitMb || 256} MB
-            </Typography>
-          </Stack>
-        </Box>
+            >
+              <ArrowBackRoundedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+
+          <Box>
+            <Stack direction="row" alignItems="center" spacing={1.5}>
+              <Typography variant="h5" sx={{ fontWeight: 700, color: '#0F172A', fontSize: '1.3rem' }}>
+                {problem.title || 'Coding Problem'}
+              </Typography>
+              <Chip
+                label={diffLabel}
+                size="small"
+                sx={{
+                  fontWeight: 700,
+                  fontSize: '0.75rem',
+                  height: 24,
+                  ...diffStyle,
+                }}
+              />
+            </Stack>
+            <Stack direction="row" spacing={1} sx={{ mt: 0.5, alignItems: 'center' }}>
+              <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 500 }}>
+                Time Limit: {problem.timeLimitMs || 1000} ms
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#CBD5E1' }}>•</Typography>
+              <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 500 }}>
+                Memory Limit: {problem.memoryLimitMb || 256} MB
+              </Typography>
+            </Stack>
+          </Box>
+        </Stack>
 
         <Stack direction="row" spacing={1.5} alignItems="center">
           <Button

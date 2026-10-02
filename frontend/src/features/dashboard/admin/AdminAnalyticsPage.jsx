@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Box,
   Grid,
@@ -8,7 +9,9 @@ import {
   CircularProgress,
   IconButton,
   Tooltip,
+  Button,
 } from '@mui/material';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { Doughnut, Bar } from 'react-chartjs-2';
 import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
 import WorkspacePremiumRoundedIcon from '@mui/icons-material/WorkspacePremiumRounded';
@@ -103,6 +106,29 @@ const AdminAnalyticsPage = () => {
 
   return (
     <Box sx={{ pb: 4 }}>
+      {/* Breadcrumbs / Back Navigation */}
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+        <Button
+          component={Link}
+          to="/admin"
+          startIcon={<ArrowBackRoundedIcon />}
+          size="small"
+          sx={{
+            color: '#64748B',
+            textTransform: 'none',
+            fontWeight: 600,
+            p: 0,
+            '&:hover': { color: '#D97706', bgcolor: 'transparent' },
+          }}
+        >
+          Dashboard
+        </Button>
+        <Typography variant="body2" sx={{ color: '#CBD5E1' }}>/</Typography>
+        <Typography variant="body2" sx={{ color: '#0F172A', fontWeight: 600 }}>
+          Analytics
+        </Typography>
+      </Stack>
+
       {/* Header */}
       <Stack
         direction={{ xs: 'column', sm: 'row' }}

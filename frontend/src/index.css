@@ -1,0 +1,125 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   CodeArena Design Tokens
+   Palette: near-black "arena floor" ink, with a two-color signature —
+   amber (rank/gold, primary actions) and violet (secondary, live/active
+   states). Inter carries display and body type for a clean, professional
+   finish; JetBrains Mono is reserved for data (scores, ranks, code) to
+   keep the coding-platform identity.
+   ========================================================================== */
+:root {
+  --ca-ink: #f8fafc;
+  --ca-surface: #ffffff;
+  --ca-surface-2: #f1f5f9;
+  --ca-line: #e2e8f0;
+  --ca-line-soft: #edf2f7;
+
+  --ca-text: #0f172a;
+  --ca-text-muted: #64748b;
+  --ca-text-faint: #94a3b8;
+
+  --ca-amber: #f59e0b;
+  --ca-amber-dim: #d97706;
+  --ca-violet: #7c5cff;
+  --ca-violet-dim: #6366f1;
+
+  --ca-emerald: #10b981;
+  --ca-rose: #ef4444;
+  --ca-sky: #0284c7;
+
+  --ca-font-display: 'Inter', system-ui, -apple-system, sans-serif;
+  --ca-font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --ca-font-mono: 'JetBrains Mono', ui-monospace, 'Courier New', monospace;
+
+  --ca-radius-sm: 6px;
+  --ca-radius-md: 10px;
+  --ca-radius-lg: 16px;
+
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ca-ink);
+  color: var(--ca-text);
+  font-family: var(--ca-font-body);
+  -webkit-font-smoothing: antialiased;
+  background-image:
+    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(124, 92, 255, 0.04), transparent 60%),
+    radial-gradient(ellipse 700px 500px at 100% 0%, rgba(245, 158, 11, 0.05), transparent 55%);
+  background-attachment: fixed;
+}
+
+::selection {
+  background: rgba(245, 158, 11, 0.2);
+  color: #0f172a;
+}
+
+/* Visible keyboard focus everywhere — accessibility floor */
+:focus-visible {
+  outline: 2px solid var(--ca-amber);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.font-display {
+  font-family: var(--ca-font-display);
+}
+.font-mono {
+  font-family: var(--ca-font-mono);
+}
+
+/* Scoreboard ticker signature element */
+@keyframes ca-ticker-scroll {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+.ca-ticker-track {
+  animation: ca-ticker-scroll 16s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

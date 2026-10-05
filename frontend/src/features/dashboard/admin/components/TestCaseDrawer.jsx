@@ -80,16 +80,21 @@ const TestCaseDrawer = ({ open, problem, onClose }) => {
   };
 
   const handleDelete = async (tcId) => {
-    setError('');
-    setSuccess('');
-    try {
-      await adminService.deleteTestCase(tcId);
-      setTestCases((prev) => prev.filter((t) => t.id !== tcId));
-      setSuccess('Test case removed.');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to delete test case.');
-    }
-  };
+  if (!problem?.id) return;
+
+  setError('');
+  setSuccess('');
+
+  try {
+    await adminService.deleteTestCase(problem.id, tcId);
+
+    setTestCases((prev) => prev.filter((t) => t.id !== tcId));
+
+    setSuccess('Test case removed.');
+  } catch (err) {
+    setError(err.response?.data?.message || 'Failed to delete test case.');
+  }
+};
 
   return (
     <Drawer anchor="right" open={open} onClose={onClose}>

@@ -10,12 +10,14 @@ import {
   Tooltip,
   Chip,
 } from '@mui/material';
+
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
 import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
 import DeleteSweepRoundedIcon from '@mui/icons-material/DeleteSweepRounded';
 import TextDecreaseRoundedIcon from '@mui/icons-material/TextDecreaseRounded';
 import TextIncreaseRoundedIcon from '@mui/icons-material/TextIncreaseRounded';
+
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { toggleTheme, setFontSize } from '@/features/editor/editorSlice';
 import { defineMonacoThemes } from '@/features/problems/monacoConfig';
@@ -131,10 +133,57 @@ const OnlineCompilerPage = () => {
   const dispatch = useAppDispatch();
   const { monacoTheme, fontSize } = useAppSelector((s) => s.editor);
 
-  const [selectedLang, setSelectedLang] = useState(COMPILER_LANGUAGES[0]); // default C
+  const isDarkMode = monacoTheme === 'ca-dark';
+
+  /*
+   * Theme colors
+   * These are used throughout the compiler page so that
+   * the UI changes together with the Monaco editor.
+   */
+  const theme = {
+    pageBackground: isDarkMode ? '#0B1120' : '#FFFFFF',
+
+    panelBackground: isDarkMode ? '#111827' : '#FFFFFF',
+    headerBackground: isDarkMode ? '#172033' : '#FAFAFA',
+    secondaryBackground: isDarkMode ? '#0F172A' : '#F8FAFC',
+
+    outputBackground: isDarkMode ? '#0B1220' : '#F8FAFC',
+    outputBoxBackground: isDarkMode ? '#1E293B' : '#FFFFFF',
+
+    inputBackground: isDarkMode ? '#1E293B' : '#FFFFFF',
+
+    border: isDarkMode ? '#334155' : '#E2E8F0',
+    borderStrong: isDarkMode ? '#475569' : '#CBD5E1',
+
+    primaryText: isDarkMode ? '#F8FAFC' : '#0F172A',
+    secondaryText: isDarkMode ? '#CBD5E1' : '#475569',
+    mutedText: isDarkMode ? '#94A3B8' : '#64748B',
+
+    iconColor: isDarkMode ? '#CBD5E1' : '#64748B',
+
+    languageBackground: isDarkMode ? '#1E293B' : '#F8FAFC',
+    languageText: isDarkMode ? '#CBD5E1' : '#64748B',
+
+    hoverBackground: isDarkMode ? '#334155' : '#F1F5F9',
+
+    outputText: isDarkMode ? '#F8FAFC' : '#0F172A',
+    placeholder: isDarkMode ? '#64748B' : '#94A3B8',
+
+    successBackground: isDarkMode ? '#14532D' : '#DCFCE7',
+    successText: isDarkMode ? '#86EFAC' : '#15803D',
+    successBorder: isDarkMode ? '#166534' : '#BBF7D0',
+
+    errorBackground: isDarkMode ? '#450A0A' : '#FEE2E2',
+    errorText: isDarkMode ? '#FCA5A5' : '#B91C1C',
+    errorBorder: isDarkMode ? '#7F1D1D' : '#FECACA',
+
+    accent: '#F59E0B',
+  };
+
+  const [selectedLang, setSelectedLang] = useState(COMPILER_LANGUAGES[0]);
   const [code, setCode] = useState(COMPILER_LANGUAGES[0].defaultCode);
   const [stdin, setStdin] = useState('');
-  const [output, setOutput] = useState(null); // { verdict, text, runtimeMs }
+  const [output, setOutput] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
 
   const handleLanguageSelect = (langObj) => {
@@ -145,6 +194,7 @@ const OnlineCompilerPage = () => {
 
   const handleRun = async () => {
     setIsRunning(true);
+
     try {
       const res = await problemService.compile({
         language: selectedLang.id,
@@ -153,15 +203,23 @@ const OnlineCompilerPage = () => {
       });
 
       const data = res.data || res;
+
       setOutput({
         verdict: data.verdict || 'SUCCESS',
-        text: data.output || data.stderr || 'Program executed with no output.',
+        text:
+          data.output ||
+          data.stdout ||
+          data.stderr ||
+          'Program executed with no output.',
         runtimeMs: data.runtimeMs || 0,
       });
     } catch (err) {
       setOutput({
         verdict: 'RUNTIME_ERROR',
-        text: err.response?.data?.message || err.message || 'Execution error.',
+        text:
+          err.response?.data?.message ||
+          err.message ||
+          'Execution error.',
         runtimeMs: 0,
       });
     } finally {
@@ -170,8 +228,19 @@ const OnlineCompilerPage = () => {
   };
 
   return (
-    <Box sx={{ height: 'calc(100vh - 96px)', display: 'flex', gap: 2, p: 0.5 }}>
-      {/* Left Icon Sidebar for Language Selection */}
+    <Box
+      sx={{
+        height: 'calc(100vh - 96px)',
+        display: 'flex',
+        gap: 2,
+        p: 0.5,
+        bgcolor: theme.pageBackground,
+        transition: 'background-color 0.2s ease',
+      }}
+    >
+      {/* =========================================================
+          LEFT LANGUAGE SIDEBAR
+      ========================================================= */}
       <Paper
         elevation={0}
         sx={{
@@ -182,14 +251,21 @@ const OnlineCompilerPage = () => {
           alignItems: 'center',
           py: 2,
           gap: 1.5,
-          bgcolor: '#FFFFFF',
-          border: '1px solid #E2E8F0',
+          bgcolor: theme.panelBackground,
+          border: `1px solid ${theme.border}`,
+          transition: 'all 0.2s ease',
         }}
       >
         {COMPILER_LANGUAGES.map((lang) => {
           const isSelected = selectedLang.id === lang.id;
+
           return (
-            <Tooltip key={lang.id} title={`${lang.name} Compiler`} placement="right" arrow>
+            <Tooltip
+              key={lang.id}
+              title={`${lang.name} Compiler`}
+              placement="right"
+              arrow
+            >
               <Box
                 onClick={() => handleLanguageSelect(lang)}
                 sx={{
@@ -203,15 +279,37 @@ const OnlineCompilerPage = () => {
                   fontWeight: 700,
                   fontSize: '0.8125rem',
                   fontFamily: "'JetBrains Mono', monospace",
-                  bgcolor: isSelected ? 'rgba(245, 158, 11, 0.15)' : '#F8FAFC',
-                  color: isSelected ? '#D97706' : '#64748B',
-                  border: isSelected ? '1.5px solid #F59E0B' : '1px solid #E2E8F0',
-                  boxShadow: isSelected ? '0 2px 6px rgba(245, 158, 11, 0.2)' : 'none',
+
+                  bgcolor: isSelected
+                    ? 'rgba(245, 158, 11, 0.15)'
+                    : theme.languageBackground,
+
+                  color: isSelected
+                    ? '#D97706'
+                    : theme.languageText,
+
+                  border: isSelected
+                    ? '1.5px solid #F59E0B'
+                    : `1px solid ${theme.border}`,
+
+                  boxShadow: isSelected
+                    ? '0 2px 6px rgba(245, 158, 11, 0.2)'
+                    : 'none',
+
                   transition: 'all 0.15s ease',
+
                   '&:hover': {
-                    bgcolor: isSelected ? 'rgba(245, 158, 11, 0.2)' : '#F1F5F9',
-                    color: isSelected ? '#D97706' : '#0F172A',
-                    borderColor: isSelected ? '#F59E0B' : '#CBD5E1',
+                    bgcolor: isSelected
+                      ? 'rgba(245, 158, 11, 0.2)'
+                      : theme.hoverBackground,
+
+                    color: isSelected
+                      ? '#D97706'
+                      : theme.primaryText,
+
+                    borderColor: isSelected
+                      ? '#F59E0B'
+                      : theme.borderStrong,
                   },
                 }}
               >
@@ -222,9 +320,20 @@ const OnlineCompilerPage = () => {
         })}
       </Paper>
 
-      {/* Main Container: Editor (Left) & Console (Right) */}
-      <Box sx={{ flex: 1, display: 'flex', gap: 2, minWidth: 0 }}>
-        {/* Editor Panel */}
+      {/* =========================================================
+          MAIN CONTAINER
+      ========================================================= */}
+      <Box
+        sx={{
+          flex: 1,
+          display: 'flex',
+          gap: 2,
+          minWidth: 0,
+        }}
+      >
+        {/* =======================================================
+            EDITOR PANEL
+        ======================================================= */}
         <Paper
           elevation={0}
           sx={{
@@ -233,16 +342,23 @@ const OnlineCompilerPage = () => {
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
-            bgcolor: '#FFFFFF',
-            border: '1px solid #E2E8F0',
+            bgcolor: theme.panelBackground,
+            border: `1px solid ${theme.border}`,
+            transition: 'all 0.2s ease',
           }}
         >
-          {/* Header Bar */}
+          {/* Header */}
           <Stack
             direction="row"
             alignItems="center"
             justifyContent="space-between"
-            sx={{ px: 2, py: 1.2, borderBottom: '1px solid #E2E8F0', bgcolor: '#FAFAFA' }}
+            sx={{
+              px: 2,
+              py: 1.2,
+              borderBottom: `1px solid ${theme.border}`,
+              bgcolor: theme.headerBackground,
+              transition: 'all 0.2s ease',
+            }}
           >
             <Stack direction="row" alignItems="center" spacing={1.5}>
               <Chip
@@ -253,36 +369,81 @@ const OnlineCompilerPage = () => {
                   fontWeight: 600,
                   fontSize: '0.75rem',
                   borderRadius: 1.5,
-                  bgcolor: '#FFFFFF',
-                  color: '#0F172A',
-                  border: '1px solid #E2E8F0',
+                  bgcolor: theme.panelBackground,
+                  color: theme.primaryText,
+                  border: `1px solid ${theme.border}`,
                 }}
               />
-              <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 500 }}>
+
+              <Typography
+                variant="caption"
+                sx={{
+                  color: theme.secondaryText,
+                  fontWeight: 500,
+                }}
+              >
                 {selectedLang.name} Online Compiler
               </Typography>
             </Stack>
 
             <Stack direction="row" spacing={1} alignItems="center">
+              {/* Decrease Font */}
               <Tooltip title="Decrease font size">
-                <IconButton size="small" onClick={() => dispatch(setFontSize(Math.max(11, fontSize - 1)))} sx={{ color: '#64748B' }}>
+                <IconButton
+                  size="small"
+                  onClick={() =>
+                    dispatch(setFontSize(Math.max(11, fontSize - 1)))
+                  }
+                  sx={{
+                    color: theme.iconColor,
+                    '&:hover': {
+                      bgcolor: theme.hoverBackground,
+                    },
+                  }}
+                >
                   <TextDecreaseRoundedIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
+
+              {/* Increase Font */}
               <Tooltip title="Increase font size">
-                <IconButton size="small" onClick={() => dispatch(setFontSize(Math.min(22, fontSize + 1)))} sx={{ color: '#64748B' }}>
+                <IconButton
+                  size="small"
+                  onClick={() =>
+                    dispatch(setFontSize(Math.min(22, fontSize + 1)))
+                  }
+                  sx={{
+                    color: theme.iconColor,
+                    '&:hover': {
+                      bgcolor: theme.hoverBackground,
+                    },
+                  }}
+                >
                   <TextIncreaseRoundedIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
+
+              {/* Theme Toggle */}
               <Tooltip title="Toggle theme">
-                <IconButton size="small" onClick={() => dispatch(toggleTheme())} sx={{ color: '#64748B' }}>
-                  {monacoTheme === 'ca-dark' ? (
+                <IconButton
+                  size="small"
+                  onClick={() => dispatch(toggleTheme())}
+                  sx={{
+                    color: theme.iconColor,
+                    '&:hover': {
+                      bgcolor: theme.hoverBackground,
+                    },
+                  }}
+                >
+                  {isDarkMode ? (
                     <DarkModeRoundedIcon fontSize="small" />
                   ) : (
                     <LightModeRoundedIcon fontSize="small" />
                   )}
                 </IconButton>
               </Tooltip>
+
+              {/* Run */}
               <Button
                 variant="contained"
                 color="primary"
@@ -322,7 +483,9 @@ const OnlineCompilerPage = () => {
           </Box>
         </Paper>
 
-        {/* Output & Input Panel */}
+        {/* =======================================================
+            OUTPUT + INPUT PANEL
+        ======================================================= */}
         <Paper
           elevation={0}
           sx={{
@@ -331,99 +494,211 @@ const OnlineCompilerPage = () => {
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
-            bgcolor: '#FFFFFF',
-            border: '1px solid #E2E8F0',
+            bgcolor: theme.panelBackground,
+            border: `1px solid ${theme.border}`,
+            transition: 'all 0.2s ease',
           }}
         >
-          {/* Header Bar */}
+          {/* Header */}
           <Stack
             direction="row"
             alignItems="center"
             justifyContent="space-between"
-            sx={{ px: 2, py: 1.2, borderBottom: '1px solid #E2E8F0', bgcolor: '#FAFAFA' }}
+            sx={{
+              px: 2,
+              py: 1.2,
+              borderBottom: `1px solid ${theme.border}`,
+              bgcolor: theme.headerBackground,
+              transition: 'all 0.2s ease',
+            }}
           >
-            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#0F172A' }}>
+            <Typography
+              variant="subtitle2"
+              sx={{
+                fontWeight: 700,
+                color: theme.primaryText,
+              }}
+            >
               Execution Output
             </Typography>
+
             <Tooltip title="Clear output">
-              <IconButton size="small" onClick={() => setOutput(null)} sx={{ color: '#64748B' }}>
+              <IconButton
+                size="small"
+                onClick={() => setOutput(null)}
+                sx={{
+                  color: theme.iconColor,
+                  '&:hover': {
+                    bgcolor: theme.hoverBackground,
+                  },
+                }}
+              >
                 <DeleteSweepRoundedIcon fontSize="small" />
               </IconButton>
             </Tooltip>
           </Stack>
 
-          {/* Output Display Area */}
+          {/* =====================================================
+              OUTPUT DISPLAY
+          ===================================================== */}
           <Box
             sx={{
               flex: 1,
               p: 2,
               overflow: 'auto',
-              bgcolor: monacoTheme === 'ca-dark' ? '#0F172A' : '#F8FAFC',
+
+              // IMPORTANT: Theme-aware output background
+              bgcolor: theme.outputBackground,
+
               fontFamily: "'JetBrains Mono', monospace",
               fontSize: '0.84rem',
-              color: monacoTheme === 'ca-dark' ? '#F8FAFC' : '#0F172A',
+
+              // IMPORTANT: Theme-aware default text
+              color: theme.outputText,
+
               whiteSpace: 'pre-wrap',
               wordBreak: 'break-word',
+              transition: 'all 0.2s ease',
             }}
           >
             {isRunning && (
-              <Typography variant="body2" sx={{ color: '#D97706', fontWeight: 600 }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: theme.accent,
+                  fontWeight: 600,
+                }}
+              >
                 Compiling and running {selectedLang.name} program…
               </Typography>
             )}
+
             {!isRunning && output && (
               <Stack spacing={1}>
+                {/* Compilation Error */}
                 {output.verdict === 'COMPILATION_ERROR' && (
                   <Chip
                     label="Compilation Error"
                     size="small"
-                    sx={{ bgcolor: '#FEE2E2', color: '#B91C1C', border: '1px solid #FECACA', fontWeight: 700, width: 'fit-content' }}
+                    sx={{
+                      bgcolor: theme.errorBackground,
+                      color: theme.errorText,
+                      border: `1px solid ${theme.errorBorder}`,
+                      fontWeight: 700,
+                      width: 'fit-content',
+                    }}
                   />
                 )}
+
+                {/* Runtime Error */}
                 {output.verdict === 'RUNTIME_ERROR' && (
                   <Chip
                     label="Runtime Error"
                     size="small"
-                    sx={{ bgcolor: '#FEE2E2', color: '#B91C1C', border: '1px solid #FECACA', fontWeight: 700, width: 'fit-content' }}
+                    sx={{
+                      bgcolor: theme.errorBackground,
+                      color: theme.errorText,
+                      border: `1px solid ${theme.errorBorder}`,
+                      fontWeight: 700,
+                      width: 'fit-content',
+                    }}
                   />
                 )}
+
+                {/* Success */}
                 {output.verdict === 'SUCCESS' && (
                   <Chip
                     label="Execution Success"
                     size="small"
-                    sx={{ bgcolor: '#DCFCE7', color: '#15803D', border: '1px solid #BBF7D0', fontWeight: 700, width: 'fit-content' }}
+                    sx={{
+                      bgcolor: theme.successBackground,
+                      color: theme.successText,
+                      border: `1px solid ${theme.successBorder}`,
+                      fontWeight: 700,
+                      width: 'fit-content',
+                    }}
                   />
                 )}
+
+                {/* =================================================
+                    ACTUAL OUTPUT BOX
+                ================================================= */}
                 <Box
                   component="div"
                   sx={{
                     lineHeight: 1.6,
                     p: 1.5,
-                    bgcolor: '#FFFFFF',
-                    border: '1px solid #E2E8F0',
+
+                    // IMPORTANT FIX:
+                    // Previously this was always #FFFFFF.
+                    bgcolor: theme.outputBoxBackground,
+
+                    border: `1px solid ${theme.border}`,
                     borderRadius: 1.5,
+
+                    // IMPORTANT FIX:
+                    // Explicit output text color.
+                    color: theme.outputText,
+
+                    fontFamily: "'JetBrains Mono', monospace",
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+
+                    transition: 'all 0.2s ease',
                   }}
                 >
                   {output.text}
                 </Box>
 
-                <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 500 }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: theme.mutedText,
+                    fontWeight: 500,
+                  }}
+                >
                   Execution time: {output.runtimeMs} ms
                 </Typography>
               </Stack>
             )}
+
             {!isRunning && !output && (
-              <Typography variant="body2" sx={{ color: '#64748B', fontStyle: 'italic' }}>
-                Click <strong>Run</strong> to compile and execute your code. Standard output and errors will appear here.
+              <Typography
+                variant="body2"
+                sx={{
+                  color: theme.mutedText,
+                  fontStyle: 'italic',
+                }}
+              >
+                Click <strong>Run</strong> to compile and execute your code.
+                Standard output and errors will appear here.
               </Typography>
             )}
           </Box>
 
-          {/* Stdin / Custom Input Section */}
-          <Box sx={{ borderTop: '1px solid #E2E8F0', p: 1.75, bgcolor: '#FAFAFA' }}>
-            <Typography variant="caption" sx={{ color: '#475569', fontWeight: 700, mb: 0.75, display: 'block' }}>
+          {/* =====================================================
+              STANDARD INPUT
+          ===================================================== */}
+          <Box
+            sx={{
+              borderTop: `1px solid ${theme.border}`,
+              p: 1.75,
+              bgcolor: theme.headerBackground,
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <Typography
+              variant="caption"
+              sx={{
+                color: theme.secondaryText,
+                fontWeight: 700,
+                mb: 0.75,
+                display: 'block',
+              }}
+            >
               Standard Input (stdin):
             </Typography>
+
             <Box
               component="textarea"
               value={stdin}
@@ -433,17 +708,31 @@ const OnlineCompilerPage = () => {
                 width: '100%',
                 height: 72,
                 resize: 'none',
-                bgcolor: '#FFFFFF',
-                border: '1px solid #E2E8F0',
+
+                // IMPORTANT: Theme-aware input background
+                bgcolor: theme.inputBackground,
+
+                border: `1px solid ${theme.border}`,
                 borderRadius: 1.5,
                 p: 1.25,
                 outline: 'none',
-                color: '#0F172A',
+
+                // IMPORTANT: Theme-aware input text
+                color: theme.primaryText,
+
                 fontFamily: "'JetBrains Mono', monospace",
                 fontSize: '0.8125rem',
-                '&:focus': {
-                  borderColor: '#F59E0B',
+
+                '&::placeholder': {
+                  color: theme.placeholder,
+                  opacity: 1,
                 },
+
+                '&:focus': {
+                  borderColor: theme.accent,
+                },
+
+                transition: 'all 0.2s ease',
               }}
             />
           </Box>

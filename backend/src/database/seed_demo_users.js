@@ -54,18 +54,17 @@ async function seed() {
   }
 
   // 4. Verify login with authService
-  const authService = require('../modules/auth/auth.service');
-  const adminLogin = await authService.login({ email: 'admin@gmail.com', password: 'Admin@123' });
+  const adminLogin = await (require('../modules/auth/auth.service')).login({ email: 'admin@gmail.com', password: 'Admin@123' });
   console.log('✓ Admin login test verified: User ID =', adminLogin.user.id, 'Role =', adminLogin.user.role);
 
-  const studentLogin = await authService.login({ email: 'student@gmail.com', password: 'Student@123' });
+  const studentLogin = await (require('../modules/auth/auth.service')).login({ email: 'student@gmail.com', password: 'Student@123' });
   console.log('✓ Student login test verified: User ID =', studentLogin.user.id, 'Role =', studentLogin.user.role);
 
   // Also verify username login
-  const adminByUsername = await authService.login({ email: 'admin', password: 'Admin@123' });
+  const adminByUsername = await (require('../modules/auth/auth.service')).login({ email: 'admin', password: 'Admin@123' });
   console.log('✓ Admin username login verified: User ID =', adminByUsername.user.id);
 
-  const studentByUsername = await authService.login({ email: 'student', password: 'Student@123' });
+  const studentByUsername = await (require('../modules/auth/auth.service')).login({ email: 'student', password: 'Student@123' });
   console.log('✓ Student username login verified: User ID =', studentByUsername.user.id);
 
   console.log('\n--- DEMO CREDENTIALS SEEDED & VERIFIED SUCCESSFULLY ---');

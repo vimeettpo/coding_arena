@@ -608,7 +608,7 @@ const ProblemWorkspacePage = () => {
                         <Stack spacing={1.5}>
                           <Stack direction="row" alignItems="center" spacing={1.5}>
                             <VerdictChip verdict={output.verdict} />
-                            <Typography variant="caption" sx={{ color: '#64748B', fontWeight: 500 }}>
+                            <Typography variant="caption" sx={{ color: '#268956', fontWeight: 500 }}>
                               Runtime: {output.runtimeMs} ms
                               {output.memoryKb ? ` · Memory: ${(output.memoryKb / 1024).toFixed(1)} MB` : ''}
                             </Typography>
@@ -639,7 +639,7 @@ const ProblemWorkspacePage = () => {
                         </Stack>
                       )}
                       {!isRunning && !output && (
-                        <Typography variant="body2" sx={{ color: '#64748B', fontStyle: 'italic' }}>
+                        <Typography variant="body2" sx={{ color: '#bdc43b', fontStyle: 'italic' }}>
                           Click "Run Code" or "Submit Solution" to execute your program and view the judge output here.
                         </Typography>
                       )}

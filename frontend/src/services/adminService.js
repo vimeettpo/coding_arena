@@ -27,7 +27,7 @@ const adminService = {
   // Test Cases
   getTestCases: (problemId) => api.get(`/admin/problems/${problemId}/testcases`).then((r) => r.data),
   addTestCase: (problemId, data) => api.post(`/admin/problems/${problemId}/testcases`, data).then((r) => r.data),
-  deleteTestCase: (tcId) => api.delete(`/admin/problems/testcases/${tcId}`).then((r) => r.data),
+  deleteTestCase: (problemId, tcId) => api.delete(`/admin/problems/${problemId}/testcases/${tcId}`).then((r) => r.data),
 
   // Contests & Assessments
   getContests: (params = {}) => api.get('/admin/contests', { params }).then((r) => r.data),

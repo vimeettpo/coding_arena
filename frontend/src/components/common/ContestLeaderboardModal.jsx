@@ -84,8 +84,18 @@ const ContestLeaderboardModal = ({ open, contestId, contestTitle = '', onClose }
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle sx={{ p: 2.5, pb: 1.5 }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
+      <DialogTitle
+  sx={{
+    p: 2.5,
+    pb: 1.5,
+    position: 'relative',
+  }}
+>
+  <Stack
+    direction="row"
+    alignItems="center"
+    sx={{ pr: 5 }}
+  >
           <Stack direction="row" spacing={1.5} alignItems="center">
             <Box
               sx={{
@@ -107,9 +117,23 @@ const ContestLeaderboardModal = ({ open, contestId, contestTitle = '', onClose }
               </Typography>
             </Box>
           </Stack>
-          <IconButton onClick={onClose} size="small">
-            <CloseRoundedIcon />
-          </IconButton>
+          <IconButton
+            onClick={onClose}
+            size="small"
+            aria-label="Close leaderboard"
+            sx={{
+             position: 'absolute',
+             top: 16,
+             right: 16,
+             color: '#64748B',
+            '&:hover': {
+              bgcolor: '#F1F5F9',
+              color: '#0F172A',
+             },
+            }}
+         >
+           <CloseRoundedIcon />
+         </IconButton>
         </Stack>
       </DialogTitle>
 

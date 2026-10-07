@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import {
@@ -18,6 +18,8 @@ import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
 import DeleteSweepRoundedIcon from '@mui/icons-material/DeleteSweepRounded';
 import TextDecreaseRoundedIcon from '@mui/icons-material/TextDecreaseRounded';
 import TextIncreaseRoundedIcon from '@mui/icons-material/TextIncreaseRounded';
+import FullscreenRoundedIcon from '@mui/icons-material/FullscreenRounded';
+import FullscreenExitRoundedIcon from '@mui/icons-material/FullscreenExitRounded';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { toggleTheme, setFontSize } from '@/features/editor/editorSlice';
 import { defineMonacoThemes } from '@/features/problems/monacoConfig';
@@ -138,6 +140,56 @@ const OnlineCompilerPage = () => {
   const [stdin, setStdin] = useState('');
   const [output, setOutput] = useState(null); // { verdict, text, runtimeMs }
   const [isRunning, setIsRunning] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const rootRef = useRef(null);
+
+  // Enter/exit fullscreen. Uses the browser Fullscreen API when available and
+  // falls back to a fixed full-viewport overlay (e.g. iPhone Safari).
+  const toggleFullscreen = useCallback(async () => {
+    if (isFullscreen) {
+      if (document.fullscreenElement) {
+        try { await document.exitFullscreen(); } catch { /* ignore */ }
+      }
+      setIsFullscreen(false);
+      return;
+    }
+    setIsFullscreen(true);
+    if (rootRef.current?.requestFullscreen) {
+      try { await rootRef.current.requestFullscreen(); } catch { /* overlay fallback stays on */ }
+    }
+  }, [isFullscreen]);
+
+  // Keep state in sync when the user leaves fullscreen with Esc / browser UI.
+  useEffect(() => {
+    const onChange = () => {
+      if (!document.fullscreenElement) setIsFullscreen(false);
+    };
+    document.addEventListener('fullscreenchange', onChange);
+    return () => document.removeEventListener('fullscreenchange', onChange);
+  }, []);
+
+  // Esc closes the overlay fallback; F11-style shortcut: Ctrl/Cmd + Shift + F.
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape' && isFullscreen && !document.fullscreenElement) {
+        setIsFullscreen(false);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        toggleFullscreen();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isFullscreen, toggleFullscreen]);
+
+  // Lock page scroll behind the overlay.
+  useEffect(() => {
+    if (!isFullscreen) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [isFullscreen]);
 
   const handleLanguageSelect = (langObj) => {
     setSelectedLang(langObj);
@@ -172,7 +224,23 @@ const OnlineCompilerPage = () => {
   };
 
   return (
-    <Box sx={{ height: 'calc(100vh - 96px)', display: 'flex', gap: 2, p: 0.5 }}>
+    <Box
+      ref={rootRef}
+      sx={
+        isFullscreen
+          ? {
+              position: 'fixed',
+              inset: 0,
+              zIndex: (t) => t.zIndex.modal + 1,
+              height: '100vh',
+              display: 'flex',
+              gap: 2,
+              p: 1.5,
+              bgcolor: '#F1F5F9',
+            }
+          : { height: 'calc(100vh - 96px)', display: 'flex', gap: 2, p: 0.5 }
+      }
+    >
       {/* Left Icon Sidebar for Language Selection */}
       <Paper
         elevation={0}
@@ -291,6 +359,15 @@ const OnlineCompilerPage = () => {
               <Tooltip title="Increase font size">
                 <IconButton size="small" onClick={() => dispatch(setFontSize(Math.min(22, fontSize + 1)))} sx={{ color: '#64748B' }}>
                   <TextIncreaseRoundedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title={isFullscreen ? 'Exit full screen (Esc)' : 'Full screen (Ctrl+Shift+F)'}>
+                <IconButton size="small" onClick={toggleFullscreen} sx={{ color: '#64748B' }}>
+                  {isFullscreen ? (
+                    <FullscreenExitRoundedIcon fontSize="small" />
+                  ) : (
+                    <FullscreenRoundedIcon fontSize="small" />
+                  )}
                 </IconButton>
               </Tooltip>
               <Tooltip title="Toggle theme">

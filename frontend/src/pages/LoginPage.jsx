@@ -180,7 +180,7 @@ const LoginPage = () => {
               value={form.email}
               onChange={handleChange('email')}
               autoComplete="username"
-              InputLabelProps={{ sx: { color: 'text.secondary' } }}
+              slotProps={{ inputLabel: { sx: { color: 'text.secondary' } } }}
             />
             <TextField
               label="Password"
@@ -191,29 +191,25 @@ const LoginPage = () => {
               value={form.password}
               onChange={handleChange('password')}
               autoComplete="current-password"
-              InputLabelProps={{ sx: { color: 'text.secondary' } }}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton onClick={() => setShowPassword((s) => !s)} edge="end" aria-label="Toggle password visibility">
-                      {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
+              slotProps={{
+                inputLabel: { sx: { color: 'text.secondary' } },
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowPassword((s) => !s)}
+                        onMouseDown={(e) => e.preventDefault()}
+                        edge="end"
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                },
               }}
             />
-            <Stack direction="row" alignItems="center" justifyContent="space-between">
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    size="small"
-                    checked={showPassword}
-                    onChange={(e) => setShowPassword(e.target.checked)}
-                    sx={{ color: 'text.secondary', '&.Mui-checked': { color: '#D97706' } }}
-                  />
-                }
-                label={<Typography variant="body2" sx={{ color: 'text.primary' }}>Show password</Typography>}
-              />
+            <Stack direction="row" alignItems="center" justifyContent="flex-end">
               <Link component={RouterLink} to="/forgot-password" variant="body2" sx={{ color: '#D97706', fontWeight: 600 }}>
                 Forgot password?
               </Link>

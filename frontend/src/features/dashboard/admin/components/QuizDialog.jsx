@@ -24,6 +24,8 @@ import {
   Divider,
   Paper,
   InputAdornment,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
@@ -46,7 +48,11 @@ const ALL_LANGUAGES = [
 ];
 
 const QuizDialog = ({ open, onClose, onSuccess }) => {
-  const [tab, setTab] = useState(0); // 0: Settings, 1: MCQs, 2: Coding Problems
+  // Which tab is open: 'settings' | 'mcq' | 'coding'
+  const [tab, setTab] = useState('settings');
+
+  // NEW: what kind of test is this? 'MCQ' (only MCQs), 'CODING' (only coding), 'MIXED' (both)
+  const [testType, setTestType] = useState('MCQ');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -81,7 +87,8 @@ const QuizDialog = ({ open, onClose, onSuccess }) => {
 
   useEffect(() => {
     if (open) {
-      setTab(0);
+      setTab('settings');
+      setTestType('MCQ');
       setError('');
       setTitle('');
       setDescription('');
@@ -191,14 +198,28 @@ const QuizDialog = ({ open, onClose, onSuccess }) => {
     return bankProblems.filter((p) => p.title?.toLowerCase().includes(q) || p.difficulty?.toLowerCase().includes(q));
   }, [bankProblems, problemSearch]);
 
-  // Total points calculation
+  // ---------- NEW: which sections does this test type use? ----------
+  const showMcq = testType === 'MCQ' || testType === 'MIXED';
+  const showCoding = testType === 'CODING' || testType === 'MIXED';
+
+  // The tabs that are visible for the chosen test type (Settings is always first)
+  const tabKeys = ['settings', ...(showMcq ? ['mcq'] : []), ...(showCoding ? ['coding'] : [])];
+  const tabIndex = tabKeys.indexOf(tab);
+
+  // A completely empty MCQ card is ignored (so it never blocks publishing or counts marks)
+  const isBlankMcq = (q) => !q.questionText.trim() && q.options.every((o) => !o.trim());
+  const filledQuestions = useMemo(() => questions.filter((q) => !isBlankMcq(q)), [questions]);
+
+  // Total points calculation (only counts the sections used by this test type)
   const totalMcqPoints = useMemo(() => {
-    return questions.reduce((sum, q) => sum + (Number(q.points) || 0), 0);
-  }, [questions]);
+    if (!showMcq) return 0;
+    return filledQuestions.reduce((sum, q) => sum + (Number(q.points) || 0), 0);
+  }, [filledQuestions, showMcq]);
 
   const totalCodingPoints = useMemo(() => {
+    if (!showCoding) return 0;
     return codingProblems.reduce((sum, cp) => sum + (Number(cp.points) || 0), 0);
-  }, [codingProblems]);
+  }, [codingProblems, showCoding]);
 
   const totalMarks = totalMcqPoints + totalCodingPoints;
 
@@ -209,17 +230,63 @@ const QuizDialog = ({ open, onClose, onSuccess }) => {
 
     if (!title.trim()) {
       setError('Please provide a test title.');
-      setTab(0);
+      setTab('settings');
       return;
     }
 
-    // Filter out completely blank MCQs if user left them empty
-    const validQuestions = questions.filter(
-      (q) => q.questionText.trim() && q.options.some((opt) => opt.trim())
-    );
+    // ---------- Validate ONLY the section(s) that belong to this test type ----------
+    let cleanQuestions = []; // MCQs we will send to the server
 
-    if (validQuestions.length === 0 && codingProblems.length === 0) {
-      setError('Test must have at least one valid MCQ question or one coding problem.');
+    if (showMcq) {
+      if (filledQuestions.length === 0) {
+        setError('Please add at least one MCQ question before publishing.');
+        setTab('mcq');
+        return;
+      }
+
+      for (let i = 0; i < filledQuestions.length; i++) {
+        const q = filledQuestions[i];
+        const filledOptions = q.options.filter((o) => o.trim());
+
+        if (!q.questionText.trim()) {
+          setError(`MCQ ${i + 1}: question text is empty.`);
+          setTab('mcq');
+          return;
+        }
+        if (filledOptions.length < 2) {
+          setError(`MCQ ${i + 1}: please fill at least 2 options.`);
+          setTab('mcq');
+          return;
+        }
+        if (!q.options[q.correctOptionIndex]?.trim()) {
+          setError(`MCQ ${i + 1}: the selected correct option is empty. Pick a filled option.`);
+          setTab('mcq');
+          return;
+        }
+      }
+
+      // Remove blank options and re-calculate which option is the correct one
+      cleanQuestions = filledQuestions.map((q) => {
+        const options = [];
+        let correctIndex = 0;
+        q.options.forEach((opt, i) => {
+          if (opt.trim()) {
+            if (i === q.correctOptionIndex) correctIndex = options.length;
+            options.push(opt.trim());
+          }
+        });
+        return {
+          questionText: q.questionText.trim(),
+          options,
+          correctOptionIndex: correctIndex,
+          points: Number(q.points) || 5,
+        };
+      });
+    }
+
+    if (showCoding && codingProblems.length === 0) {
+      setError('Please select at least one coding problem before publishing.');
+      setTab('coding');
       return;
     }
 
@@ -233,20 +300,20 @@ const QuizDialog = ({ open, onClose, onSuccess }) => {
         endTime: endTime ? new Date(endTime).toISOString() : null,
         targetBranch,
         targetYear: targetYear === 'ALL' ? null : Number(targetYear),
-        allowedLanguages,
-        negativeMarking,
-        negativeMarks: negativeMarking ? Number(negativeMarks) || 0 : 0,
+        // Languages only matter for coding tests
+        allowedLanguages: showCoding ? allowedLanguages : [],
+        // Negative marking only matters for MCQ tests
+        negativeMarking: showMcq ? negativeMarking : false,
+        negativeMarks: showMcq && negativeMarking ? Number(negativeMarks) || 0 : 0,
         passingPercentage: Number(passingPercentage) || 40,
-        questions: validQuestions.map((q) => ({
-          questionText: q.questionText.trim(),
-          options: q.options.map((o) => o.trim()),
-          correctOptionIndex: Number(q.correctOptionIndex) || 0,
-          points: Number(q.points) || 5,
-        })),
-        codingProblems: codingProblems.map((cp) => ({
-          problemId: cp.problemId,
-          points: Number(cp.points) || 20,
-        })),
+        // An MCQ-only test sends NO coding problems, a coding-only test sends NO MCQs
+        questions: showMcq ? cleanQuestions : [],
+        codingProblems: showCoding
+          ? codingProblems.map((cp) => ({
+              problemId: cp.problemId,
+              points: Number(cp.points) || 20,
+            }))
+          : [],
       };
 
       await quizService.create(payload);
@@ -298,17 +365,30 @@ const QuizDialog = ({ open, onClose, onSuccess }) => {
             },
           }}
         >
-          <Tab icon={<TuneRoundedIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="1. Test Settings" />
           <Tab
-            icon={<QuizRoundedIcon sx={{ fontSize: 18 }} />}
+            value="settings"
+            icon={<TuneRoundedIcon sx={{ fontSize: 18 }} />}
             iconPosition="start"
-            label={`2. MCQs (${questions.length})`}
+            label="1. Test Settings"
           />
-          <Tab
-            icon={<CodeRoundedIcon sx={{ fontSize: 18 }} />}
-            iconPosition="start"
-            label={`3. Coding Problems (${codingProblems.length})`}
-          />
+          {/* MCQ tab is hidden for a Coding-only test */}
+          {showMcq && (
+            <Tab
+              value="mcq"
+              icon={<QuizRoundedIcon sx={{ fontSize: 18 }} />}
+              iconPosition="start"
+              label={`${tabKeys.indexOf('mcq') + 1}. MCQs (${filledQuestions.length})`}
+            />
+          )}
+          {/* Coding tab is hidden for an MCQ-only test */}
+          {showCoding && (
+            <Tab
+              value="coding"
+              icon={<CodeRoundedIcon sx={{ fontSize: 18 }} />}
+              iconPosition="start"
+              label={`${tabKeys.indexOf('coding') + 1}. Coding Problems (${codingProblems.length})`}
+            />
+          )}
         </Tabs>
       </Box>
 
@@ -321,8 +401,32 @@ const QuizDialog = ({ open, onClose, onSuccess }) => {
           )}
 
           {/* TAB 0: SETTINGS */}
-          {tab === 0 && (
+          {tab === 'settings' && (
             <Stack spacing={2.5}>
+              {/* NEW: choose what this test contains */}
+              <Box>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#0F172A', mb: 1 }}>
+                  Test Type
+                </Typography>
+                <ToggleButtonGroup
+                  exclusive
+                  fullWidth
+                  size="small"
+                  value={testType}
+                  onChange={(_, v) => v && setTestType(v)} // v is null if the same button is clicked again
+                >
+                  <ToggleButton value="MCQ" sx={{ textTransform: 'none', fontWeight: 700 }}>
+                    MCQ Test Only
+                  </ToggleButton>
+                  <ToggleButton value="CODING" sx={{ textTransform: 'none', fontWeight: 700 }}>
+                    Coding Test Only
+                  </ToggleButton>
+                  <ToggleButton value="MIXED" sx={{ textTransform: 'none', fontWeight: 700 }}>
+                    MCQ + Coding
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
+
               <TextField
                 fullWidth
                 label="Test Title"
@@ -412,7 +516,8 @@ const QuizDialog = ({ open, onClose, onSuccess }) => {
                 </TextField>
               </Stack>
 
-              {/* Language customisation */}
+              {/* Language customisation (only for tests that have coding problems) */}
+              {showCoding && (
               <Box sx={{ p: 2, bgcolor: '#F8FAFC', borderRadius: 2, border: '1px solid #E2E8F0' }}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#0F172A', mb: 0.5 }}>
                   Allowed Programming Languages{' '}
@@ -445,8 +550,10 @@ const QuizDialog = ({ open, onClose, onSuccess }) => {
                   })}
                 </Stack>
               </Box>
+              )}
 
-              {/* Negative marking */}
+              {/* Negative marking (only for tests that have MCQs) */}
+              {showMcq && (
               <Stack
                 direction={{ xs: 'column', sm: 'row' }}
                 spacing={2}
@@ -476,15 +583,16 @@ const QuizDialog = ({ open, onClose, onSuccess }) => {
                   />
                 )}
               </Stack>
+              )}
             </Stack>
           )}
 
           {/* TAB 1: MCQs */}
-          {tab === 1 && (
+          {tab === 'mcq' && showMcq && (
             <Stack spacing={3}>
               <Stack direction="row" justifyContent="space-between" alignItems="center">
                 <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#0F172A' }}>
-                  Multiple Choice Questions ({questions.length} Questions • {totalMcqPoints} Marks)
+                  Multiple Choice Questions ({filledQuestions.length} Questions • {totalMcqPoints} Marks)
                 </Typography>
                 <Button
                   variant="outlined"
@@ -587,7 +695,7 @@ const QuizDialog = ({ open, onClose, onSuccess }) => {
           )}
 
           {/* TAB 2: CODING QUESTIONS */}
-          {tab === 2 && (
+          {tab === 'coding' && showCoding && (
             <Stack spacing={2.5}>
               <Box>
                 <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#0F172A', mb: 0.5 }}>
@@ -730,14 +838,14 @@ const QuizDialog = ({ open, onClose, onSuccess }) => {
 
         <DialogActions sx={{ p: 2, bgcolor: '#F8FAFC', justifyContent: 'space-between' }}>
           <Stack direction="row" spacing={1}>
-            {tab > 0 && (
-              <Button onClick={() => setTab((t) => t - 1)} sx={{ color: 'text.secondary' }}>
+            {tabIndex > 0 && (
+              <Button onClick={() => setTab(tabKeys[tabIndex - 1])} sx={{ color: 'text.secondary' }}>
                 Back
               </Button>
             )}
-            {tab < 2 && (
-              <Button onClick={() => setTab((t) => t + 1)} sx={{ fontWeight: 700 }}>
-                Next: {tab === 0 ? 'MCQs' : 'Coding Problems'}
+            {tabIndex < tabKeys.length - 1 && (
+              <Button onClick={() => setTab(tabKeys[tabIndex + 1])} sx={{ fontWeight: 700 }}>
+                Next: {tabKeys[tabIndex + 1] === 'mcq' ? 'MCQs' : 'Coding Problems'}
               </Button>
             )}
           </Stack>
@@ -759,7 +867,15 @@ const QuizDialog = ({ open, onClose, onSuccess }) => {
                 px: 3,
               }}
             >
-              {submitting ? <CircularProgress size={20} color="inherit" /> : 'Publish Test'}
+              {submitting ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : testType === 'MCQ' ? (
+                'Publish MCQ Test'
+              ) : testType === 'CODING' ? (
+                'Publish Coding Test'
+              ) : (
+                'Publish Test'
+              )}
             </Button>
           </Stack>
         </DialogActions>

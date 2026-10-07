@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -27,6 +26,7 @@ import {
   RadioGroup,
   FormControlLabel,
   Divider,
+  MenuItem,
 } from '@mui/material';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import QuizRoundedIcon from '@mui/icons-material/QuizRounded';
@@ -34,17 +34,18 @@ import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import EmojiEventsRoundedIcon from '@mui/icons-material/EmojiEventsRounded';
 import ScheduleRoundedIcon from '@mui/icons-material/ScheduleRounded';
-import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 
 import quizService from '@/services/quizService';
 import QuizLeaderboardModal from '@/components/common/QuizLeaderboardModal';
 import QuizDialog from './components/QuizDialog';
+import { COLLEGE_BRANCHES } from './adminConstants';
 
 const AdminQuizzesPage = () => {
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusTab, setStatusTab] = useState('ALL');
   const [search, setSearch] = useState('');
+  const [selectedBranch, setSelectedBranch] = useState(''); // '' = All Branches
 
   // Leaderboard Modal
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
@@ -98,35 +99,14 @@ const AdminQuizzesPage = () => {
 
   const filteredQuizzes = quizzes.filter((q) => {
     const matchesSearch = q.title?.toLowerCase().includes(search.toLowerCase().trim());
-    if (statusTab === 'ALL') return matchesSearch;
-    return matchesSearch && q.status === statusTab;
+    // Branch filter: '' shows everything, otherwise show only tests made for that branch
+    const matchesBranch = !selectedBranch || q.targetBranch === selectedBranch;
+    if (statusTab === 'ALL') return matchesSearch && matchesBranch;
+    return matchesSearch && matchesBranch && q.status === statusTab;
   });
 
   return (
     <Box sx={{ pb: 4 }}>
-      {/* Breadcrumbs / Back Navigation */}
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
-        <Button
-          component={Link}
-          to="/admin"
-          startIcon={<ArrowBackRoundedIcon />}
-          size="small"
-          sx={{
-            color: '#64748B',
-            textTransform: 'none',
-            fontWeight: 600,
-            p: 0,
-            '&:hover': { color: '#D97706', bgcolor: 'transparent' },
-          }}
-        >
-          Dashboard
-        </Button>
-        <Typography variant="body2" sx={{ color: '#CBD5E1' }}>/</Typography>
-        <Typography variant="body2" sx={{ color: '#0F172A', fontWeight: 600 }}>
-          Tests & MCQs
-        </Typography>
-      </Stack>
-
       {/* Header */}
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
@@ -177,20 +157,39 @@ const AdminQuizzesPage = () => {
             <Tab value="ENDED" label="Concluded" sx={{ textTransform: 'none', fontWeight: 600 }} />
           </Tabs>
 
-          <TextField
-            size="small"
-            sx={{ width: { xs: '100%', md: 320 } }}
-            placeholder="Search test by title..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchRoundedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
-                </InputAdornment>
-              ),
-            }}
-          />
+          {/* Right corner: branch dropdown + search box */}
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ width: { xs: '100%', md: 'auto' } }}>
+            <TextField
+              select
+              size="small"
+              sx={{ minWidth: { xs: '100%', sm: 240 } }}
+              label="Filter Branch"
+              value={selectedBranch}
+              onChange={(e) => setSelectedBranch(e.target.value)}
+            >
+              <MenuItem value="">All Branches</MenuItem>
+              {COLLEGE_BRANCHES.map((b) => (
+                <MenuItem key={b} value={b}>
+                  {b}
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <TextField
+              size="small"
+              sx={{ width: { xs: '100%', md: 280 } }}
+              placeholder="Search test by title..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchRoundedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Stack>
         </Stack>
       </Paper>
 
@@ -200,8 +199,6 @@ const AdminQuizzesPage = () => {
           <TableHead>
             <TableRow sx={{ bgcolor: '#F8FAFC' }}>
               <TableCell sx={{ fontWeight: 700 }}>Test Title</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>Duration</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>Total Marks</TableCell>
               <TableCell sx={{ fontWeight: 700 }}>Question Mix</TableCell>
               <TableCell sx={{ fontWeight: 700 }}>Allowed Languages</TableCell>
               <TableCell sx={{ fontWeight: 700 }}>Target Group</TableCell>

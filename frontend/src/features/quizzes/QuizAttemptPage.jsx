@@ -23,7 +23,6 @@ import {
   MenuItem,
   TextField,
   CircularProgress,
-  Grid,
   Tooltip,
   IconButton,
 } from '@mui/material';
@@ -36,12 +35,13 @@ import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
 import CodeRoundedIcon from '@mui/icons-material/CodeRounded';
 import QuizRoundedIcon from '@mui/icons-material/QuizRounded';
+import MenuBookRoundedIcon from '@mui/icons-material/MenuBookRounded';
 import Editor from '@monaco-editor/react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import quizService from '@/services/quizService';
 import problemService from '@/services/problemService';
-import { LANGUAGE_BOILERPLATE, MONACO_LANGUAGE_ID } from '../problems/monacoConfig';
+import { LANGUAGE_BOILERPLATE, MONACO_LANGUAGE_ID, defineMonacoThemes } from '../problems/monacoConfig';
 
 const ALL_LANGUAGES = [
   { key: 'JAVA', label: 'Java', monaco: 'java' },
@@ -50,6 +50,27 @@ const ALL_LANGUAGES = [
   { key: 'C', label: 'C', monaco: 'c' },
   { key: 'JAVASCRIPT', label: 'JavaScript', monaco: 'javascript' },
 ];
+
+// Checks if the student's code reads user input (so we know whether to ask for input before running).
+// Comments are removed first so a word like "input" inside a comment does not trigger it.
+const INPUT_PATTERNS = {
+  PYTHON: /\binput\s*\(|sys\.stdin|fileinput/,
+  JAVA: /\bScanner\b|\bBufferedReader\b|System\.in\b|\bConsole\b/,
+  C: /\bscanf\s*\(|\bgets\s*\(|\bfgets\s*\(|\bgetchar\s*\(|\bgetc\s*\(|\bfscanf\s*\(/,
+  CPP: /\bcin\b|\bscanf\s*\(|\bgetline\s*\(|\bgets\s*\(|\bgetchar\s*\(|\bfgets\s*\(/,
+  JAVASCRIPT: /\breadline\b|\bstdin\b|process\.stdin|\bprompt\s*\(/,
+};
+
+const codeNeedsInput = (code, language) => {
+  let clean = code || '';
+  if (language === 'PYTHON') {
+    clean = clean.replace(/#.*$/gm, '');
+  } else {
+    clean = clean.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  }
+  const pattern = INPUT_PATTERNS[language];
+  return pattern ? pattern.test(clean) : false;
+};
 
 const QuizAttemptPage = () => {
   const { id } = useParams();
@@ -69,11 +90,15 @@ const QuizAttemptPage = () => {
 
   // Coding Problems state
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
-  const [codingSolutions, setCodingSolutions] = useState({}); // { [problemId]: { code, language, score, status, output } }
+  const [codingSolutions, setCodingSolutions] = useState({}); // verified results: { [problemId]: { code, language, score, status } }
+  const [codeDrafts, setCodeDrafts] = useState({}); // what the student is typing: { [problemId]: { [LANGUAGE]: code } }
   const [activeLanguage, setActiveLanguage] = useState('JAVA');
-  const [customInput, setCustomInput] = useState('');
-  const [consoleOutput, setConsoleOutput] = useState(null);
+  const [customInput, setCustomInput] = useState(''); // stdin typed by the student (remembered for the next run)
+  const [awaitingInput, setAwaitingInput] = useState(false); // true = terminal is asking the student to type input
+  const [lastInput, setLastInput] = useState(''); // the input used in the last run (shown in the terminal)
+  const [consoleOutput, setConsoleOutput] = useState(null); // { text, type, runtimeMs } where type = 'success' | 'error' | 'info'
   const [runningCode, setRunningCode] = useState(false);
+  const [showProblem, setShowProblem] = useState(true); // show/hide the problem statement panel
 
   // Timer & Confirmation state
   const [timeLeft, setTimeLeft] = useState(null);
@@ -144,13 +169,17 @@ const QuizAttemptPage = () => {
     return quiz.codingProblems[currentProblemIndex] || quiz.codingProblems[0];
   }, [quiz?.codingProblems, currentProblemIndex]);
 
-  // Current code in editor
+  // Small helpers to convert the language key (JAVA, PYTHON...) for the editor and boilerplate.
+  // The helper files use lowercase keys, while this page uses UPPERCASE keys.
+  const monacoLangId = MONACO_LANGUAGE_ID[activeLanguage.toLowerCase()] || 'java';
+  const getBoilerplate = (lang) => LANGUAGE_BOILERPLATE[lang.toLowerCase()] || '';
+
+  // Current code in editor: the student's draft for this problem + language, or the starter template
   const currentCode = useMemo(() => {
     if (!currentCodingProblem) return '';
-    const sol = codingSolutions[currentCodingProblem.problemId];
-    if (sol && sol.code) return sol.code;
-    return LANGUAGE_BOILERPLATE[activeLanguage] || LANGUAGE_BOILERPLATE['JAVA'] || '';
-  }, [codingSolutions, currentCodingProblem, activeLanguage]);
+    const draft = codeDrafts[currentCodingProblem.problemId]?.[activeLanguage];
+    return draft !== undefined ? draft : getBoilerplate(activeLanguage);
+  }, [codeDrafts, currentCodingProblem, activeLanguage]);
 
   const handleSelectOption = (questionId, optionIndex) => {
     setAnswers((prev) => ({
@@ -159,23 +188,26 @@ const QuizAttemptPage = () => {
     }));
   };
 
+  // Save what the student types (separately for every problem and every language)
   const handleCodeChange = (newCode) => {
     if (!currentCodingProblem) return;
-    setCodingSolutions((prev) => ({
+    const pId = currentCodingProblem.problemId;
+    setCodeDrafts((prev) => ({
       ...prev,
-      [currentCodingProblem.problemId]: {
-        ...(prev[currentCodingProblem.problemId] || {}),
-        code: newCode,
-        language: activeLanguage,
-      },
+      [pId]: { ...(prev[pId] || {}), [activeLanguage]: newCode ?? '' },
     }));
   };
 
-  // Run Code against custom input
-  const handleRunCode = async () => {
+  // Show a message in the terminal
+  const showOutput = (text, type = 'info', runtimeMs = null) => setConsoleOutput({ text, type, runtimeMs });
+
+  // Actually sends the code to the compiler with the given input text
+  const runProgram = async (inputText) => {
     if (!currentCodingProblem) return;
+    setAwaitingInput(false);
+    setLastInput(inputText);
     setRunningCode(true);
-    setConsoleOutput('Executing code...');
+    showOutput('Running...', 'info');
 
     try {
       const slug = currentCodingProblem.slug;
@@ -184,29 +216,52 @@ const QuizAttemptPage = () => {
         res = await problemService.run(slug, {
           language: activeLanguage,
           code: currentCode,
-          customInput,
+          customInput: inputText,
         });
       } else {
         res = await problemService.compile({
           language: activeLanguage,
           code: currentCode,
-          input: customInput,
+          input: inputText,
+          stdin: inputText,
         });
       }
       const data = res.data || res;
-      setConsoleOutput(data.output || data.stdout || data.stderr || 'Code executed successfully (no output).');
+      const text = data.output || data.stdout || data.stderr || '';
+      const failed = data.verdict && data.verdict !== 'ACCEPTED';
+
+      if (!text.trim()) {
+        showOutput('(Program finished without printing anything)', 'info', data.runtimeMs);
+      } else {
+        showOutput(text, failed ? 'error' : 'success', data.runtimeMs);
+      }
     } catch (err) {
-      setConsoleOutput(err.response?.data?.message || err.message || 'Execution error.');
+      showOutput(err.response?.data?.message || err.message || 'Execution error.', 'error');
     } finally {
       setRunningCode(false);
+    }
+  };
+
+  // Run button:
+  //  - program reads input  -> ask for the input inside the terminal first
+  //  - program has no input -> run immediately and show the output
+  const handleRunCode = () => {
+    if (!currentCodingProblem) return;
+    if (codeNeedsInput(currentCode, activeLanguage)) {
+      setConsoleOutput(null);
+      setAwaitingInput(true);
+    } else {
+      runProgram('');
     }
   };
 
   // Submit and verify code for current problem
   const handleSaveProblemCode = async () => {
     if (!currentCodingProblem) return;
+    setAwaitingInput(false); // close the input prompt so the verdict is visible
+    setLastInput('');
     setRunningCode(true);
-    setConsoleOutput('Validating solution against test cases...');
+    showOutput('Validating solution against test cases...', 'info');
 
     try {
       const slug = currentCodingProblem.slug;
@@ -239,13 +294,14 @@ const QuizAttemptPage = () => {
         },
       }));
 
-      setConsoleOutput(
+      showOutput(
         isAccepted
-          ? `✓ Accepted! All sample test cases passed (${points}/${currentCodingProblem.points || 20} points awarded).`
-          : `✗ Test evaluation: ${data.judgeOutput || data.verdict || 'Wrong Answer or Runtime Error'}`
+          ? `✓ Accepted! All test cases passed (${points}/${currentCodingProblem.points || 20} points awarded).`
+          : `✗ Test evaluation: ${data.judgeOutput || data.verdict || 'Wrong Answer or Runtime Error'}`,
+        isAccepted ? 'success' : 'error'
       );
     } catch (err) {
-      setConsoleOutput(err.response?.data?.message || 'Verification error.');
+      showOutput(err.response?.data?.message || 'Verification error.', 'error');
     } finally {
       setRunningCode(false);
     }
@@ -257,13 +313,29 @@ const QuizAttemptPage = () => {
     setSubmitting(true);
     setShowConfirm(false);
 
-    const codingSubmissionsArray = Object.keys(codingSolutions).map((pId) => ({
-      problemId: pId,
-      code: codingSolutions[pId]?.code || '',
-      language: codingSolutions[pId]?.language || activeLanguage,
-      score: codingSolutions[pId]?.score || 0,
-      status: codingSolutions[pId]?.status || 'SUBMITTED',
-    }));
+    // Send every problem the student worked on. Verified ones keep their score,
+    // problems that were only typed (never verified) are sent with 0 score.
+    const touchedIds = Array.from(new Set([...Object.keys(codingSolutions), ...Object.keys(codeDrafts)]));
+    const codingSubmissionsArray = touchedIds.map((pId) => {
+      const verified = codingSolutions[pId];
+      if (verified) {
+        return {
+          problemId: pId,
+          code: verified.code || '',
+          language: verified.language || activeLanguage,
+          score: verified.score || 0,
+          status: verified.status || 'SUBMITTED',
+        };
+      }
+      const draftLang = Object.keys(codeDrafts[pId] || {})[0] || activeLanguage;
+      return {
+        problemId: pId,
+        code: codeDrafts[pId]?.[draftLang] || '',
+        language: draftLang,
+        score: 0,
+        status: 'SUBMITTED',
+      };
+    });
 
     quizService
       .submit(id, {
@@ -797,10 +869,19 @@ const QuizAttemptPage = () => {
             </Paper>
           )}
 
-          {/* Split Screen Workspace */}
-          <Grid container spacing={2}>
-            {/* Left: Problem Statement */}
-            <Grid item xs={12} md={5}>
+          {/* ============ ONLINE COMPILER WORKSPACE ============ */}
+          {/* Desktop: [ Problem | Editor | Output terminal ].  Small screens: everything stacked. */}
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', md: 'row' },
+              gap: 2,
+              height: { md: 'calc(100vh - 260px)' },
+              minHeight: { md: 560 },
+            }}
+          >
+            {/* LEFT: Problem Statement (can be hidden) */}
+            {showProblem && (
               <Paper
                 elevation={0}
                 sx={{
@@ -808,7 +889,9 @@ const QuizAttemptPage = () => {
                   borderRadius: 3,
                   bgcolor: '#FFFFFF',
                   border: '1px solid #E2E8F0',
-                  height: 'calc(100vh - 250px)',
+                  flex: { md: '0 0 32%' },
+                  minWidth: 0,
+                  maxHeight: { xs: 360, md: 'none' },
                   overflowY: 'auto',
                 }}
               >
@@ -861,16 +944,36 @@ const QuizAttemptPage = () => {
                         elevation={0}
                         sx={{ p: 1.5, mb: 1.5, bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 2 }}
                       >
-                        <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', display: 'block' }}>
-                          Input:
-                        </Typography>
-                        <Typography variant="caption" sx={{ fontFamily: "'JetBrains Mono', monospace", display: 'block', mb: 1 }}>
+                        <Stack direction="row" justifyContent="space-between" alignItems="center">
+                          <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B' }}>
+                            Input:
+                          </Typography>
+                          {/* One click runs your code with this sample input */}
+                          <Button
+                            size="small"
+                            disabled={runningCode}
+                            onClick={() => {
+                              setCustomInput(stc.input || '');
+                              runProgram(stc.input || '');
+                            }}
+                            sx={{ textTransform: 'none', fontSize: '0.7rem', minWidth: 0, py: 0 }}
+                          >
+                            Run with this input
+                          </Button>
+                        </Stack>
+                        <Typography
+                          variant="caption"
+                          sx={{ fontFamily: "'JetBrains Mono', monospace", display: 'block', mb: 1, whiteSpace: 'pre-wrap' }}
+                        >
                           {stc.input || '(empty)'}
                         </Typography>
                         <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748B', display: 'block' }}>
                           Expected Output:
                         </Typography>
-                        <Typography variant="caption" sx={{ fontFamily: "'JetBrains Mono', monospace", color: '#10B981', fontWeight: 600 }}>
+                        <Typography
+                          variant="caption"
+                          sx={{ fontFamily: "'JetBrains Mono', monospace", color: '#10B981', fontWeight: 600, whiteSpace: 'pre-wrap' }}
+                        >
                           {stc.expectedOutput || '(empty)'}
                         </Typography>
                       </Paper>
@@ -878,136 +981,307 @@ const QuizAttemptPage = () => {
                   </Box>
                 )}
               </Paper>
-            </Grid>
+            )}
 
-            {/* Right: Monaco Editor & Console */}
-            <Grid item xs={12} md={7}>
-              <Paper
-                elevation={0}
+            {/* RIGHT: Compiler (toolbar + editor + output terminal) */}
+            <Paper
+              elevation={0}
+              sx={{
+                flex: 1,
+                minWidth: 0,
+                borderRadius: 3,
+                bgcolor: '#0B1220',
+                border: '1px solid #1E293B',
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+              }}
+            >
+              {/* Toolbar: language + buttons */}
+              <Box
                 sx={{
-                  borderRadius: 3,
-                  bgcolor: '#FFFFFF',
-                  border: '1px solid #E2E8F0',
-                  height: 'calc(100vh - 250px)',
+                  p: 1.5,
+                  bgcolor: '#0F172A',
+                  borderBottom: '1px solid #1E293B',
                   display: 'flex',
-                  flexDirection: 'column',
-                  overflow: 'hidden',
+                  flexWrap: 'wrap',
+                  gap: 1,
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
                 }}
               >
-                {/* Editor Header Bar with Allowed Languages */}
-                <Box sx={{ p: 1.5, bgcolor: '#0F172A', color: '#FFFFFF', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Stack direction="row" spacing={1.5} alignItems="center">
-                    <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600 }}>
-                      Language:
-                    </Typography>
-                    <Select
-                      size="small"
-                      value={activeLanguage}
-                      onChange={(e) => setActiveLanguage(e.target.value)}
-                      sx={{
-                        height: 32,
-                        bgcolor: '#1E293B',
-                        color: '#FFFFFF',
-                        fontSize: '0.8rem',
-                        fontWeight: 600,
-                        '& .MuiSvgIcon-root': { color: '#FFFFFF' },
-                      }}
-                    >
-                      {selectableLanguages.map((lang) => (
-                        <MenuItem key={lang.key} value={lang.key}>
-                          {lang.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </Stack>
+                <Stack direction="row" spacing={1.5} alignItems="center">
+                  <Button
+                    size="small"
+                    onClick={() => setShowProblem((v) => !v)}
+                    startIcon={<MenuBookRoundedIcon />}
+                    sx={{ color: '#CBD5E1', textTransform: 'none', fontWeight: 600 }}
+                  >
+                    {showProblem ? 'Hide Problem' : 'Show Problem'}
+                  </Button>
 
-                  <Stack direction="row" spacing={1}>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      startIcon={<PlayArrowRoundedIcon />}
-                      onClick={handleRunCode}
-                      disabled={runningCode}
-                      sx={{
-                        color: '#E2E8F0',
-                        borderColor: '#334155',
-                        textTransform: 'none',
-                        fontWeight: 600,
-                        '&:hover': { borderColor: '#94A3B8', bgcolor: '#1E293B' },
-                      }}
-                    >
-                      Run Custom Input
-                    </Button>
+                  <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 600 }}>
+                    Language:
+                  </Typography>
+                  <Select
+                    size="small"
+                    value={activeLanguage}
+                    onChange={(e) => setActiveLanguage(e.target.value)}
+                    sx={{
+                      height: 32,
+                      bgcolor: '#1E293B',
+                      color: '#FFFFFF',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      '& .MuiSvgIcon-root': { color: '#FFFFFF' },
+                    }}
+                  >
+                    {selectableLanguages.map((lang) => (
+                      <MenuItem key={lang.key} value={lang.key}>
+                        {lang.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </Stack>
 
-                    <Button
-                      size="small"
-                      variant="contained"
-                      startIcon={<SendRoundedIcon />}
-                      onClick={handleSaveProblemCode}
-                      disabled={runningCode}
-                      sx={{
-                        bgcolor: '#F59E0B',
-                        '&:hover': { bgcolor: '#D97706' },
-                        color: '#0F172A',
-                        textTransform: 'none',
-                        fontWeight: 700,
-                      }}
-                    >
-                      Verify & Save Solution
-                    </Button>
-                  </Stack>
-                </Box>
+                <Stack direction="row" spacing={1}>
+                  <Button
+                    size="small"
+                    variant="contained"
+                    startIcon={runningCode ? <CircularProgress size={14} color="inherit" /> : <PlayArrowRoundedIcon />}
+                    onClick={handleRunCode}
+                    disabled={runningCode}
+                    sx={{
+                      bgcolor: '#2563EB',
+                      '&:hover': { bgcolor: '#1D4ED8' },
+                      color: '#FFFFFF',
+                      textTransform: 'none',
+                      fontWeight: 700,
+                      px: 2.5,
+                    }}
+                  >
+                    Run
+                  </Button>
 
-                {/* Monaco Code Editor */}
-                <Box sx={{ flex: 1, minHeight: 0 }}>
+                  <Button
+                    size="small"
+                    variant="contained"
+                    startIcon={<SendRoundedIcon />}
+                    onClick={handleSaveProblemCode}
+                    disabled={runningCode}
+                    sx={{
+                      bgcolor: '#F59E0B',
+                      '&:hover': { bgcolor: '#D97706' },
+                      color: '#0F172A',
+                      textTransform: 'none',
+                      fontWeight: 700,
+                    }}
+                  >
+                    Verify & Save Solution
+                  </Button>
+                </Stack>
+              </Box>
+
+              {/* Body: Editor (left) and Output terminal (right) */}
+              <Box
+                sx={{
+                  flex: 1,
+                  minHeight: 0,
+                  display: 'flex',
+                  flexDirection: { xs: 'column', lg: 'row' },
+                }}
+              >
+                {/* Code Editor */}
+                <Box sx={{ flex: { lg: 3 }, minWidth: 0, minHeight: { xs: 380, lg: 0 }, height: { xs: 380, lg: 'auto' } }}>
                   <Editor
                     height="100%"
-                    language={MONACO_LANGUAGE_ID[activeLanguage] || 'java'}
-                    theme="vs-dark"
+                    language={monacoLangId}
+                    theme="ca-dark"
+                    beforeMount={defineMonacoThemes}
                     value={currentCode}
                     onChange={handleCodeChange}
                     options={{
-                      fontSize: 13,
+                      fontSize: 14,
                       minimap: { enabled: false },
                       scrollBeyondLastLine: false,
                       tabSize: 4,
                       automaticLayout: true,
+                      padding: { top: 12 },
                     }}
                   />
                 </Box>
 
-                {/* Console Output Drawer */}
-                <Box sx={{ borderTop: '1px solid #E2E8F0', p: 1.5, bgcolor: '#F8FAFC', maxHeight: 130, overflowY: 'auto' }}>
-                  <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
-                    <TextField
-                      size="small"
-                      placeholder="Custom stdin input (e.g. 5\n1 2 3 4 5)..."
-                      value={customInput}
-                      onChange={(e) => setCustomInput(e.target.value)}
-                      sx={{ flex: 1 }}
-                      inputProps={{ style: { fontSize: 12, fontFamily: "'JetBrains Mono', monospace" } }}
-                    />
+                {/* ONE merged terminal: output, and the input prompt when the program needs input */}
+                <Box
+                  sx={{
+                    flex: { lg: 2 },
+                    minWidth: 0,
+                    minHeight: { xs: 300, lg: 0 },
+                    display: 'flex',
+                    flexDirection: 'column',
+                    borderLeft: { lg: '1px solid #1E293B' },
+                    borderTop: { xs: '1px solid #1E293B', lg: 'none' },
+                    bgcolor: '#0B1220',
+                  }}
+                >
+                  {/* Terminal title bar */}
+                  <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    sx={{ px: 2, py: 1, bgcolor: '#1F2937', borderBottom: '1px solid #1E293B' }}
+                  >
+                    <Typography variant="caption" sx={{ color: '#E5E7EB', fontWeight: 700, letterSpacing: 0.5 }}>
+                      Output
+                    </Typography>
+                    {(consoleOutput || awaitingInput) && (
+                      <Button
+                        size="small"
+                        onClick={() => {
+                          setConsoleOutput(null);
+                          setAwaitingInput(false);
+                        }}
+                        sx={{ color: '#9CA3AF', textTransform: 'none', fontSize: '0.7rem', minWidth: 0, py: 0 }}
+                      >
+                        Clear
+                      </Button>
+                    )}
                   </Stack>
 
-                  {consoleOutput && (
-                    <Paper elevation={0} sx={{ p: 1, bgcolor: '#0F172A', borderRadius: 1.5 }}>
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          fontFamily: "'JetBrains Mono', monospace",
-                          color: consoleOutput.includes('✓') ? '#4ADE80' : '#F87171',
-                          whiteSpace: 'pre-wrap',
-                          display: 'block',
-                        }}
-                      >
-                        {consoleOutput}
+                  {/* Terminal body */}
+                  <Box
+                    sx={{
+                      flex: 1,
+                      minHeight: 0,
+                      overflow: 'auto',
+                      p: 2,
+                      fontFamily: "'JetBrains Mono', monospace",
+                      fontSize: 13,
+                      lineHeight: 1.6,
+                      color: '#E5E7EB',
+                    }}
+                  >
+                    {/* State 1: the program needs input -> ask for it here */}
+                    {awaitingInput && (
+                      <Box>
+                        <Typography
+                          component="div"
+                          sx={{ color: '#FBBF24', fontFamily: 'inherit', fontSize: 'inherit', mb: 1 }}
+                        >
+                          ⌨ This program reads input. Type it below (one value per line), then press Ctrl + Enter.
+                        </Typography>
+                        <Box
+                          component="textarea"
+                          autoFocus
+                          value={customInput}
+                          onChange={(e) => setCustomInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            // Ctrl+Enter (or Cmd+Enter) runs the program with the typed input
+                            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                              e.preventDefault();
+                              runProgram(customInput);
+                            }
+                          }}
+                          placeholder={'Example:\n5\n1 2 3 4 5'}
+                          spellCheck={false}
+                          rows={6}
+                          sx={{
+                            width: '100%',
+                            resize: 'vertical',
+                            boxSizing: 'border-box',
+                            p: 1.25,
+                            bgcolor: '#111827',
+                            color: '#F9FAFB',
+                            border: '1px solid #F59E0B',
+                            borderRadius: 1.5,
+                            outline: 'none',
+                            fontFamily: 'inherit',
+                            fontSize: 'inherit',
+                          }}
+                        />
+                        <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                          <Button
+                            size="small"
+                            variant="contained"
+                            startIcon={<PlayArrowRoundedIcon />}
+                            onClick={() => runProgram(customInput)}
+                            sx={{
+                              bgcolor: '#2563EB',
+                              '&:hover': { bgcolor: '#1D4ED8' },
+                              textTransform: 'none',
+                              fontWeight: 700,
+                            }}
+                          >
+                            Run with input
+                          </Button>
+                          <Button
+                            size="small"
+                            onClick={() => setAwaitingInput(false)}
+                            sx={{ color: '#9CA3AF', textTransform: 'none' }}
+                          >
+                            Cancel
+                          </Button>
+                        </Stack>
+                      </Box>
+                    )}
+
+                    {/* State 2: show what was typed + the program output */}
+                    {!awaitingInput && consoleOutput && (
+                      <Box>
+                        {lastInput.trim() && consoleOutput.text !== 'Running...' && (
+                          <Box sx={{ mb: 1.5 }}>
+                            <Typography
+                              component="div"
+                              sx={{ color: '#9CA3AF', fontFamily: 'inherit', fontSize: 12, mb: 0.25 }}
+                            >
+                              Input:
+                            </Typography>
+                            <Box component="pre" sx={{ m: 0, color: '#93C5FD', fontFamily: 'inherit', whiteSpace: 'pre-wrap' }}>
+                              {lastInput}
+                            </Box>
+                          </Box>
+                        )}
+
+                        <Box
+                          component="pre"
+                          sx={{
+                            m: 0,
+                            fontFamily: 'inherit',
+                            whiteSpace: 'pre-wrap',
+                            wordBreak: 'break-word',
+                            color:
+                              consoleOutput.type === 'success'
+                                ? '#4ADE80'
+                                : consoleOutput.type === 'error'
+                                ? '#F87171'
+                                : '#9CA3AF',
+                          }}
+                        >
+                          {consoleOutput.text}
+                        </Box>
+
+                        {consoleOutput.type !== 'info' && consoleOutput.runtimeMs !== null && consoleOutput.runtimeMs !== undefined && (
+                          <Typography
+                            component="div"
+                            sx={{ mt: 1.5, color: '#6B7280', fontFamily: 'inherit', fontSize: 12 }}
+                          >
+                            {consoleOutput.type === 'success' ? '=== Code Execution Successful' : '=== Execution Finished with Errors'} ({consoleOutput.runtimeMs} ms) ===
+                          </Typography>
+                        )}
+                      </Box>
+                    )}
+
+                    {/* State 3: nothing yet */}
+                    {!awaitingInput && !consoleOutput && (
+                      <Typography component="div" sx={{ color: '#6B7280', fontFamily: 'inherit', fontSize: 'inherit' }}>
+                        Click "Run" to see the output here.
                       </Typography>
-                    </Paper>
-                  )}
+                    )}
+                  </Box>
                 </Box>
-              </Paper>
-            </Grid>
-          </Grid>
+              </Box>
+            </Paper>
+          </Box>
         </Box>
       )}
 

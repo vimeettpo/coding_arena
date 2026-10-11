@@ -2,6 +2,7 @@ import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
 import CodeRoundedIcon from '@mui/icons-material/CodeRounded';
 import EmojiEventsRoundedIcon from '@mui/icons-material/EmojiEventsRounded';
 import AssignmentRoundedIcon from '@mui/icons-material/AssignmentRounded';
+import PsychologyRoundedIcon from '@mui/icons-material/PsychologyRounded';
 import QuizRoundedIcon from '@mui/icons-material/QuizRounded';
 import LeaderboardRoundedIcon from '@mui/icons-material/LeaderboardRounded';
 import WorkspacePremiumRoundedIcon from '@mui/icons-material/WorkspacePremiumRounded';
@@ -15,7 +16,7 @@ export const NAV_BY_ROLE = {
     { label: 'Dashboard', to: '/student', icon: DashboardRoundedIcon },
     { label: 'Code', to: '/problems', icon: CodeRoundedIcon },
     { label: 'Contests', to: '/contests', icon: EmojiEventsRoundedIcon },
-    { label: 'Assignments', to: '/assignments', icon: AssignmentRoundedIcon },
+    { label: 'Aptitude', to: '/aptitude', icon: PsychologyRoundedIcon },
     { label: 'Tests', to: '/quizzes', icon: QuizRoundedIcon },
     { label: 'Leaderboard', to: '/leaderboard', icon: LeaderboardRoundedIcon },
     { label: 'Certificates', to: '/certificates', icon: WorkspacePremiumRoundedIcon },
@@ -27,6 +28,7 @@ export const NAV_BY_ROLE = {
     { label: 'Contests', to: '/trainer/contests', icon: EmojiEventsRoundedIcon },
     { label: 'Assignments', to: '/trainer/assignments', icon: AssignmentRoundedIcon },
     { label: 'Code Bank', to: '/trainer/questions', icon: CodeRoundedIcon },
+    { label: 'Aptitude', to: '/trainer/aptitude', icon: PsychologyRoundedIcon },
     { label: 'Students', to: '/trainer/students', icon: GroupsRoundedIcon },
     { label: 'Leaderboard', to: '/leaderboard', icon: LeaderboardRoundedIcon },
     { label: 'Analytics', to: '/trainer/analytics', icon: BarChartRoundedIcon },
@@ -37,6 +39,7 @@ export const NAV_BY_ROLE = {
     { label: 'Contests', to: '/admin/contests', icon: EmojiEventsRoundedIcon },
     { label: 'Tests', to: '/admin/quizzes', icon: QuizRoundedIcon },
     { label: 'Code Bank', to: '/admin/questions', icon: CodeRoundedIcon },
+    { label: 'Aptitude', to: '/admin/aptitude', icon: PsychologyRoundedIcon },
     { label: 'Leaderboard', to: '/leaderboard', icon: LeaderboardRoundedIcon },
     { label: 'Analytics', to: '/admin/analytics', icon: BarChartRoundedIcon },
     { label: 'Settings', to: '/admin/settings', icon: SettingsRoundedIcon },

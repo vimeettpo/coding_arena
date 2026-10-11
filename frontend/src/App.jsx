@@ -22,6 +22,7 @@ import AdminQuizzesPage from '@/features/dashboard/admin/AdminQuizzesPage';
 import AdminQuestionsPage from '@/features/dashboard/admin/AdminQuestionsPage';
 import AdminAnalyticsPage from '@/features/dashboard/admin/AdminAnalyticsPage';
 import AdminSettingsPage from '@/features/dashboard/admin/AdminSettingsPage';
+import AdminAptitudePage from '@/features/dashboard/admin/AdminAptitudePage';
 
 import ProblemsListPage from '@/features/problems/ProblemsListPage';
 import ProblemWorkspacePage from '@/features/problems/ProblemWorkspacePage';
@@ -32,6 +33,9 @@ import LeaderboardPage from '@/features/leaderboard/LeaderboardPage';
 import TrainerQuizzesPage from '@/features/quizzes/TrainerQuizzesPage';
 import StudentQuizzesPage from '@/features/quizzes/StudentQuizzesPage';
 import QuizAttemptPage from '@/features/quizzes/QuizAttemptPage';
+import AptitudePage from '@/features/aptitude/AptitudePage';
+import AptitudeTestPage from '@/features/aptitude/AptitudeTestPage';
+import AptitudeResultPage from '@/features/aptitude/AptitudeResultPage';
 import ComingSoon from '@/components/common/ComingSoon';
 
 function App() {
@@ -69,7 +73,10 @@ function App() {
             <Route path="/compiler" element={<OnlineCompilerPage />} />
             <Route path="/problems/practice" element={<ProblemsListPage />} />
             <Route path="/problems/:slug" element={<ProblemWorkspacePage />} />
-            <Route path="/assignments" element={<ComingSoon title="Assignments" description="Deadlines, submissions and feedback in one place." backTo="/student" backLabel="Back to Dashboard" />} />
+            <Route path="/aptitude" element={<AptitudePage />} />
+            <Route path="/aptitude/test/:id" element={<AptitudeTestPage />} />
+            <Route path="/aptitude/result/:id" element={<AptitudeResultPage />} />
+            <Route path="/assignments" element={<Navigate to="/aptitude" replace />} />
             <Route path="/quizzes" element={<StudentQuizzesPage />} />
             <Route path="/quizzes/:id/attempt" element={<QuizAttemptPage />} />
             <Route path="/certificates" element={<ComingSoon title="Certificates" description="Download your QR-verified certificates." backTo="/student" backLabel="Back to Dashboard" />} />
@@ -85,6 +92,7 @@ function App() {
             <Route path="/trainer/contests" element={<ComingSoon title="Contests" description="Build contests with coding problems, MCQs and negative marking." backTo="/trainer" backLabel="Back to Dashboard" />} />
             <Route path="/trainer/assignments" element={<ComingSoon title="Assignments" description="Create assignments and track submissions." backTo="/trainer" backLabel="Back to Dashboard" />} />
             <Route path="/trainer/questions" element={<ComingSoon title="Question bank" description="Upload problems, test cases and editorials." backTo="/trainer" backLabel="Back to Dashboard" />} />
+            <Route path="/trainer/aptitude" element={<AdminAptitudePage />} />
             <Route path="/trainer/students" element={<TrainerStudentsPage />} />
             <Route path="/trainer/analytics" element={<ComingSoon title="Analytics" description="Submission trends, difficulty analysis and pass rates." backTo="/trainer" backLabel="Back to Dashboard" />} />
           </Route>
@@ -99,6 +107,7 @@ function App() {
             <Route path="/admin/quizzes" element={<AdminQuizzesPage />} />
             <Route path="/admin/tests" element={<AdminQuizzesPage />} />
             <Route path="/admin/questions" element={<AdminQuestionsPage />} />
+            <Route path="/admin/aptitude" element={<AdminAptitudePage />} />
             <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
             <Route path="/admin/settings" element={<AdminSettingsPage />} />
           </Route>

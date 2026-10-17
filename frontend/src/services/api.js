@@ -3,8 +3,12 @@ import axios from 'axios';
 // Central Axios instance. Every feature service imports this instead of
 // calling axios directly, so auth headers, base URL and error handling
 // stay in one place.
-const primaryBaseURL = import.meta.env.VITE_API_BASE_URL || 'https://coding-arena-seven.vercel.app/api';
-const fallbackBaseURL = import.meta.env.VITE_API_FALLBACK_URL || 'http://localhost:8080/api';
+const primaryBaseURL = import.meta.env.VITE_API_BASE_URL || 'https://coding-arena-topaz.vercel.app/api';
+// A localhost fallback is only reachable during local development; in a
+// deployed build it just produces a second, misleading network error.
+const fallbackBaseURL = import.meta.env.DEV
+  ? import.meta.env.VITE_API_FALLBACK_URL || 'http://localhost:8080/api'
+  : null;
 
 const sanitizeBaseURL = (url) => {
   if (!url) return '/api';
@@ -16,7 +20,7 @@ const sanitizeBaseURL = (url) => {
 };
 
 const primaryURL = sanitizeBaseURL(primaryBaseURL);
-const fallbackURL = sanitizeBaseURL(fallbackBaseURL);
+const fallbackURL = fallbackBaseURL ? sanitizeBaseURL(fallbackBaseURL) : null;
 
 const api = axios.create({
   baseURL: primaryURL,
@@ -53,6 +57,7 @@ api.interceptors.response.use(
     // returns a server error. Client errors indicate that the hosted backend
     // was reached and should not be retried against a different server.
     const canUseFallback =
+      fallbackURL &&
       originalRequest &&
       !originalRequest._fallbackAttempt &&
       originalRequest.baseURL === primaryURL &&

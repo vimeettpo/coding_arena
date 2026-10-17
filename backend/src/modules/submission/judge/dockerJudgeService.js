@@ -1,6 +1,6 @@
 const fs = require('fs/promises');
 const path = require('path');
-const { v4: uuidv4 } = require('uuid');
+const { randomUUID: uuidv4 } = require('crypto');
 const { execFile, spawn } = require('child_process');
 const languageRuntime = require('./languageRuntime');
 const env = require('../../../config/env');

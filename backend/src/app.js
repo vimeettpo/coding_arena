@@ -19,30 +19,38 @@ const adminRoutes = require('./modules/admin/admin.routes');
 const app = express();
 
 app.use(helmet({ crossOriginResourcePolicy: false }));
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
-      if (!origin) return callback(null, true);
-      
-      // In development, automatically allow all localhost and 127.0.0.1 origins (any port)
-      if (env.nodeEnv !== 'production') {
-        if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
-          return callback(null, true);
-        }
-      }
+const allowedOrigins = env.cors.allowedOrigins
+  .map((o) => o.trim().replace(/\/+$/, '').toLowerCase())
+  .filter(Boolean);
 
-      const allowedOrigins = env.cors.allowedOrigins.map((o) => o.trim().toLowerCase());
-      if (allowedOrigins.includes('*') || allowedOrigins.includes(origin.toLowerCase())) {
-        return callback(null, true);
-      }
-      return callback(new Error(`CORS policy violation: Origin "${origin}" is not allowed.`));
-    },
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    credentials: true,
-  })
-);
-app.options('*', cors());
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
+    if (!origin) return callback(null, true);
+
+    // In development, automatically allow all localhost and 127.0.0.1 origins (any port)
+    if (env.nodeEnv !== 'production' && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+      return callback(null, true);
+    }
+
+    const normalized = origin.toLowerCase();
+    if (allowedOrigins.includes('*') || allowedOrigins.includes(normalized)) {
+      return callback(null, true);
+    }
+
+    // Respond without CORS headers instead of throwing, so a disallowed origin
+    // gets a clean browser CORS error rather than a 500 from the error handler.
+    console.warn(`[CORS] Blocked origin: ${origin}`);
+    return callback(null, false);
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 if (env.nodeEnv !== 'test') {

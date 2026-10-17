@@ -21,7 +21,7 @@ const env = {
   cors: {
     allowedOrigins: (
       process.env.CORS_ALLOWED_ORIGINS ||
-      'https://coding-arena-topaz.vercel.app,http://localhost:5173'
+      'https://coding-arena-17oz.vercel.app,https://coding-arena-topaz.vercel.app,http://localhost:5173'
     ).split(','),
   },
 

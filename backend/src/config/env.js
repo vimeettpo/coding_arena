@@ -19,7 +19,10 @@ const env = {
   },
 
   cors: {
-    allowedOrigins: (process.env.CORS_ALLOWED_ORIGINS || 'http://localhost:5173').split(','),
+    allowedOrigins: (
+      process.env.CORS_ALLOWED_ORIGINS ||
+      'https://coding-arena-c5x7.vercel.app,http://localhost:5173'
+    ).split(','),
   },
 
 

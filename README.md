@@ -168,7 +168,7 @@ JWT_REFRESH_EXPIRY_MS=604800000
 ADMIN_SECRET_CODE=codearena-admin-2026
 
 # ---- CORS ----
-CORS_ALLOWED_ORIGINS=http://localhost:5173
+CORS_ALLOWED_ORIGINS=https://coding-arena-c5x7.vercel.app,http://localhost:5173
 
 # ---- Judge (Docker sandbox) ----
 JUDGE_DISABLED=true
@@ -208,7 +208,8 @@ cp .env.example .env
 
 Your `frontend/.env` (see [`frontend/.env.example`](frontend/.env.example)):
 ```env
-VITE_API_BASE_URL=http://localhost:8080/api
+VITE_API_BASE_URL=https://coding-arena-seven.vercel.app/api
+VITE_API_FALLBACK_URL=http://localhost:8080/api
 ```
 
 Start the frontend development server:

@@ -3,7 +3,8 @@ import axios from 'axios';
 // Central Axios instance. Every feature service imports this instead of
 // calling axios directly, so auth headers, base URL and error handling
 // stay in one place.
-const rawBaseURL = import.meta.env.VITE_API_BASE_URL || '/api';
+const primaryBaseURL = import.meta.env.VITE_API_BASE_URL || 'https://coding-arena-seven.vercel.app/api';
+const fallbackBaseURL = import.meta.env.VITE_API_FALLBACK_URL || 'http://localhost:8080/api';
 
 const sanitizeBaseURL = (url) => {
   if (!url) return '/api';
@@ -14,8 +15,11 @@ const sanitizeBaseURL = (url) => {
   return cleaned;
 };
 
+const primaryURL = sanitizeBaseURL(primaryBaseURL);
+const fallbackURL = sanitizeBaseURL(fallbackBaseURL);
+
 const api = axios.create({
-  baseURL: sanitizeBaseURL(rawBaseURL),
+  baseURL: primaryURL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -45,6 +49,23 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // Use the local backend only when the hosted backend is unreachable or
+    // returns a server error. Client errors indicate that the hosted backend
+    // was reached and should not be retried against a different server.
+    const canUseFallback =
+      originalRequest &&
+      !originalRequest._fallbackAttempt &&
+      originalRequest.baseURL === primaryURL &&
+      (!error.response || error.response.status >= 500);
+
+    if (canUseFallback) {
+      return api({
+        ...originalRequest,
+        baseURL: fallbackURL,
+        _fallbackAttempt: true,
+      });
+    }
+
     // Access token expired — try the refresh-token flow once per request.
     const isAuthEndpoint = originalRequest.url?.includes('/auth/');
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
@@ -62,10 +83,7 @@ api.interceptors.response.use(
       const refreshToken = localStorage.getItem('ca_refresh_token');
 
       try {
-        const { data } = await axios.post(
-          `${sanitizeBaseURL(rawBaseURL)}/auth/refresh`,
-          { refreshToken }
-        );
+        const { data } = await api.post('/auth/refresh', { refreshToken });
         const newAccessToken = data.data.accessToken;
         localStorage.setItem('ca_access_token', newAccessToken);
         flushQueue(null, newAccessToken);

@@ -245,17 +245,38 @@ Open [http://localhost:5173](http://localhost:5173) in your browser and sign in 
 
 ## ☁️ Deployment Strategy
 
+### **Single Vercel Project**
+
+The root [`vercel.json`](vercel.json) deploys the repository as one Vercel
+project with two services:
+
+1. **`backend`** — the Express service rooted at `/backend`, using
+   `api/index.js` as its serverless entrypoint.
+2. **`frontend`** — the Vite service rooted at `/frontend`.
+
+The public routing is:
+
+- `/api/*` → `backend`
+- every other path → `frontend`
+
+The frontend defaults to the same-origin `/api` base URL, so it does not need
+an internal service binding. The backend currently has no calls to another
+repository service, so no Vercel service bindings are configured. Database
+connections and the external Judge0 endpoint remain environment-based
+dependencies rather than Vercel services.
+
 ### **Serverless API + Standalone Judge Architecture**
 
 Due to the stateless nature of serverless platforms (such as Vercel), running a Docker daemon and maintaining long-lived Socket.IO connections requires a split deployment architecture:
 
 1. **REST API & Auth (Vercel)**:
-   - Deploy `/backend` with `api/index.js` as the serverless entrypoint.
+   - The root Vercel Services configuration deploys `/backend` with
+     `api/index.js` as the serverless entrypoint.
    - Set `JUDGE_DISABLED=true` in Vercel env variables if Docker daemon is unavailable.
 2. **Code Sandbox Judge & Socket.IO (VPS / Render / Railway / Fly.io)**:
    - Deploy `src/server.js` on a host with Docker installed to handle `/run`, `/submit`, and live WebSocket broadcasts.
-3. **Frontend (Vercel / Netlify)**:
-   - Deploy `/frontend` as a static Vite build.
+3. **Frontend (same Vercel project)**:
+   - The root Vercel Services configuration builds `/frontend` as a Vite service.
 
 ---
 
